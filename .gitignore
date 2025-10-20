@@ -1,0 +1,49 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+.vscode/
+
+backend_go/vendor
+backend_go/review_board.exe
+backend_go/.env
+backend_go/sqlc.yaml
+
+# Compiled output
+backend_ng/dist
+backend_ng/tmp
+backend_ng/out-tsc
+backend_ng/bazel-out
+
+# Node
+backend_ng/node_modules
+backend_ng/npm-debug.log
+backend_ng/yarn-error.log
+
+# IDEs and editors
+backend_ng/.idea/
+backend_ng/.project
+backend_ng/.classpath
+backend_ng/.c9/
+backend_ng/*.launch
+backend_ng/.settings/
+backend_ng/*.sublime-workspace
+
+# Visual Studio Code
+backend_ng/.vscode/*
+backend_ng/!.vscode/settings.json
+backend_ng/!.vscode/tasks.json
+backend_ng/!.vscode/launch.json
+backend_ng/!.vscode/extensions.json
+backend_ng/.history/*
+
+# Miscellaneous
+backend_ng/.angular/cache
+backend_ng/.sass-cache/
+backend_ng/connect.lock
+backend_ng/coverage
+backend_ng/libpeerconnection.log
+backend_ng/testem.log
+backend_ng/typings
+
+# System files
+backend_ng/.DS_Store
+backend_ng/Thumbs.db

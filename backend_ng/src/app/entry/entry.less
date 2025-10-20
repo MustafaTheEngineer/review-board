@@ -1,0 +1,25 @@
+@import '@taiga-ui/core/styles/taiga-ui-local.less';
+
+#container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+
+  > * {
+    width: 100%;
+    min-width: 16rem;
+  }
+
+  @media @tui-tablet-min {
+    min-width: 200rem;
+  }
+
+  #ask-entry {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+}

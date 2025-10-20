@@ -1,0 +1,87 @@
+<div id="container">
+  <form
+    tuiAppearance="floating"
+    tuiCardLarge
+    tuiForm="m"
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    [style.max-width.rem]="32"
+  >
+    <header tuiHeader>
+      <h2 tuiTitle>
+        @if (registerOrSignIn()) {
+          Register
+        } @else {
+          Sign In
+        }
+      </h2>
+      <span tuiAccessories>
+        <tui-segmented [activeItemIndex]="registerOrSignIn() ? 0 : 1">
+          <button type="button" (click)="registerOrSignIn.set(true)">Register</button>
+          <button type="button" (click)="registerOrSignIn.set(false)">Sign In</button>
+        </tui-segmented>
+      </span>
+    </header>
+    <tui-textfield>
+      <label tuiLabel>Email</label>
+      <input id="email" type="text" formControlName="email" tuiTextfield />
+    </tui-textfield>
+    <tui-error [error]="emailError()" />
+
+    <tui-textfield>
+      <label tuiLabel>Password: </label>
+      <input id="password" type="password" formControlName="password" tuiTextfield />
+    </tui-textfield>
+    <tui-error [error]="passwordErr()" />
+
+    @if (registerOrSignIn()) {
+      <tui-textfield>
+        <label tuiLabel>Confirm Password: </label>
+        <input
+          id="confirmPassword"
+          type="password"
+          formControlName="confirmPassword"
+          tuiTextfield
+        />
+      </tui-textfield>
+      <tui-error [error]="passwordMatchErr()" />
+    }
+    @if (registerOrSignIn()) {
+      <button tuiButton type="submit" [disabled]="form.invalid || !passwordConfirmed()">
+        Register
+      </button>
+    } @else {
+      <button
+        tuiButton
+        type="submit"
+        [disabled]="form.controls.email.invalid || form.controls.password.invalid"
+      >
+        Sign In
+      </button>
+    }
+  </form>
+
+  <div id="ask-entry">
+    <span tuiTitle>
+      {{ registerOrSignIn() ? 'Do you have an account?' : "Don't have an account?" }}
+    </span>
+
+    @if (registerOrSignIn()) {
+      <button
+        size="s"
+        tuiButton
+        type="button"
+        [textContent]="'Sign In'"
+        (click)="registerOrSignIn.set(false)"
+      ></button>
+    } @else {
+      <button
+        size="s"
+        tuiButton
+        type="button"
+        [textContent]="'Register'"
+        (click)="registerOrSignIn.set(true)"
+      ></button>
+    }
+  </div>
+</div>

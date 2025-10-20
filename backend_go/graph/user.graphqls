@@ -1,0 +1,43 @@
+type User {
+  email: String!
+  username: String
+  confirmed: Boolean!
+  blocked: Boolean!
+  role: String!
+}
+
+directive @validateEmail on FIELD_DEFINITION
+directive @validatePassword on FIELD_DEFINITION
+
+type Mutation {
+  registerUser(input: NewUser!): RegisterUserResponse!
+    @validateEmail
+    @validatePassword
+  signIn(input: SignInInput!): SignInResponse! @validateEmail @validatePassword
+}
+
+input NewUser {
+  email: String!
+  password: String!
+}
+
+type RegisterUserResponse implements MetaAndToken {
+  metadata: ApiResponse!
+  user: User!
+  token: String!
+}
+
+input SignInInput {
+  email: String!
+  password: String!
+}
+
+type SignInResponse implements MetaAndToken {
+  metadata: ApiResponse!
+  user: User!
+  token: String!
+}
+
+type Query {
+  user(id: ID!): String!
+}
