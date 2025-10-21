@@ -20,12 +20,6 @@ export type Scalars = {
   UUID: { input: any; output: any; }
 };
 
-export type ApiResponse = {
-  __typename?: 'ApiResponse';
-  data?: Maybe<Scalars['Any']['output']>;
-  message: Scalars['String']['output'];
-};
-
 export type Mutation = {
   __typename?: 'Mutation';
   registerUser: RegisterUserResponse;
@@ -49,12 +43,7 @@ export type NewUser = {
 
 export type Query = {
   __typename?: 'Query';
-  user: Scalars['String']['output'];
-};
-
-
-export type QueryUserArgs = {
-  id: Scalars['ID']['input'];
+  validateToken: TokenValidationResponse;
 };
 
 export type RegisterUserResponse = {
@@ -74,6 +63,11 @@ export type SignInResponse = {
   user: User;
 };
 
+export type TokenValidationResponse = {
+  __typename?: 'TokenValidationResponse';
+  user: User;
+};
+
 export type User = {
   __typename?: 'User';
   blocked: Scalars['Boolean']['output'];
@@ -82,6 +76,11 @@ export type User = {
   role: Scalars['String']['output'];
   username?: Maybe<Scalars['String']['output']>;
 };
+
+export type ValidateTokenQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ValidateTokenQuery = { __typename?: 'Query', validateToken: { __typename?: 'TokenValidationResponse', user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
 
 export type RegisterUserMutationVariables = Exact<{
   input: NewUser;
@@ -97,6 +96,30 @@ export type SignInMutationVariables = Exact<{
 
 export type SignInMutation = { __typename?: 'Mutation', signIn: { __typename?: 'SignInResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
 
+export const ValidateTokenDocument = gql`
+    query ValidateToken {
+  validateToken {
+    user {
+      email
+      username
+      confirmed
+      blocked
+      role
+    }
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ValidateTokenGQL extends Apollo.Query<ValidateTokenQuery, ValidateTokenQueryVariables> {
+    document = ValidateTokenDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
 export const RegisterUserDocument = gql`
     mutation RegisterUser($input: NewUser!) {
   registerUser(input: $input) {

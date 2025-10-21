@@ -15,6 +15,7 @@ import {
 import { TuiFieldErrorPipe, TuiSegmented, TuiSwitch, TuiTooltip } from '@taiga-ui/kit';
 import { TuiCardLarge, TuiForm, TuiHeader } from '@taiga-ui/layout';
 import { error } from 'console';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-entry',
@@ -43,6 +44,7 @@ import { error } from 'console';
   },
 })
 export class Entry {
+  router = inject(Router);
   registerUserGQL = inject(RegisterUserGQL);
   signInGQL = inject(SignInGQL);
   apollo = inject(Apollo);
@@ -137,9 +139,18 @@ export class Entry {
               password: this.form.controls.password.value,
             },
           },
-        })
+        }).pipe(
+          catchError((error) => {
+            console.error(error);
+            return of(new Error('Failed to register user')) 
+          })
+        )
         .subscribe((data) => {
-          console.log(data.data?.registerUser);
+          if (data instanceof Error) {
+            
+          } else {
+            this.router.navigate(['confirm-account']);
+          }
         });
     } else {
       this.signInGQL

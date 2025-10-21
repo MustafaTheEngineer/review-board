@@ -5,14 +5,19 @@
 <header tuiNavigationHeader>
   <button title="Menu" tuiIconButton tuiNavigationDrawer type="button" [(open)]="open">
     <tui-data-list>
-      <tui-opt-group *ngFor="let group of drawer | keyvalue" [label]="group.key">
-        <button *ngFor="let item of group.value" tuiOption type="button" (click)="open = false">
-          <img alt="icon" [src]="item.icon" />
-          {{ item.name }}
-        </button>
-      </tui-opt-group>
+      @for (group of drawer | keyvalue; track $index) {
+        <tui-opt-group [label]="group.key">
+          @for (item of group.value; track $index) {
+            <button tuiOption new type="button" (click)="open = false">
+              <img alt="icon" [src]="item.icon" />
+              {{ item.name }}
+            </button>
+          }
+        </tui-opt-group>
+      }
+
       <tui-opt-group>
-        <label tuiOption>
+        <label tuiOption new>
           <input size="s" tuiSwitch type="checkbox" [(ngModel)]="switch" />
           Dark mode
         </label>
@@ -40,11 +45,11 @@
       </span>
       <ng-template #products>
         <tui-data-list size="s">
-          <button tuiOption type="button">
+          <button tuiOption new type="button">
             A very very long project
             <tui-icon icon="@tui.check" [style.font-size.em]="1" [style.margin-left.rem]="0.5" />
           </button>
-          <button tuiOption type="button">Something else</button>
+          <button tuiOption new type="button">Something else</button>
         </tui-data-list>
       </ng-template>
     </button>
@@ -60,8 +65,8 @@
   <button iconStart="@tui.ellipsis" tuiIconButton type="button">More</button>
   <tui-avatar src="AI" />
 </header>
-<div [style.display]="'flex'">
-  <aside [style.height.rem]="27" [tuiNavigationAside]="expanded()">
+<div id="container">
+  <aside [tuiNavigationAside]="expanded()">
     <header>
       <button iconStart="@tui.home" tuiAsideItem type="button">
         <span tuiFade>A very very long product name</span>
@@ -137,7 +142,7 @@
     </footer>
   </aside>
   <main tuiNavigationMain>
-    <nav compact tuiSubheader [style.position]="'sticky'">
+    <nav compact tuiSubheader>
       <tui-breadcrumbs [itemsLimit]="10">
         <ng-container *ngFor="let item of breadcrumbs; let last = last">
           <ng-container *ngIf="last">

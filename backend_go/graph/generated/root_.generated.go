@@ -66,7 +66,7 @@ type ComplexityRoot struct {
 	}
 
 	TokenValidationResponse struct {
-		Valid func(childComplexity int) int
+		User func(childComplexity int) int
 	}
 
 	User struct {
@@ -156,12 +156,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SignInResponse.User(childComplexity), true
 
-	case "TokenValidationResponse.valid":
-		if e.complexity.TokenValidationResponse.Valid == nil {
+	case "TokenValidationResponse.user":
+		if e.complexity.TokenValidationResponse.User == nil {
 			break
 		}
 
-		return e.complexity.TokenValidationResponse.Valid(childComplexity), true
+		return e.complexity.TokenValidationResponse.User(childComplexity), true
 
 	case "User.blocked":
 		if e.complexity.User.Blocked == nil {
@@ -321,7 +321,7 @@ type Query {
 }
 
 type TokenValidationResponse {
-  valid: Boolean!
+  user: User!
 }
 `, BuiltIn: false},
 	{Name: "../user.graphqls", Input: `type User {

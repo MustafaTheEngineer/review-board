@@ -12,6 +12,45 @@ import (
 	"github.com/google/uuid"
 )
 
+const confirmUser = `-- name: ConfirmUser :one
+UPDATE users
+SET verification_code = NULL, verification_code_expiry = NULL, confirmed = TRUE, provider = $2
+WHERE id = $1
+RETURNING id, email, username, provider, password_hash, reset_password_token, reset_password_token_expiry, confirmation_token, confirmed, blocked, role, verification_code, verification_code_expiry, deleted, deleted_at, last_login_at, current_login_at, created_at, updated_at
+`
+
+type ConfirmUserParams struct {
+	ID       uuid.UUID `json:"id"`
+	Provider string    `json:"provider"`
+}
+
+func (q *Queries) ConfirmUser(ctx context.Context, arg ConfirmUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, confirmUser, arg.ID, arg.Provider)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Provider,
+		&i.PasswordHash,
+		&i.ResetPasswordToken,
+		&i.ResetPasswordTokenExpiry,
+		&i.ConfirmationToken,
+		&i.Confirmed,
+		&i.Blocked,
+		&i.Role,
+		&i.VerificationCode,
+		&i.VerificationCodeExpiry,
+		&i.Deleted,
+		&i.DeletedAt,
+		&i.LastLoginAt,
+		&i.CurrentLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, username, provider, password_hash, reset_password_token, reset_password_token_expiry, confirmation_token, confirmed, blocked, role, verification_code, verification_code_expiry, deleted, deleted_at, last_login_at, current_login_at, created_at, updated_at FROM users WHERE email = $1
 `

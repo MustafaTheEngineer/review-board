@@ -33,5 +33,5 @@ type SignInResponse struct {
 }
 
 type TokenValidationResponse struct {
-	Valid bool `json:"valid"`
+	User *database.User `json:"user"`
 }

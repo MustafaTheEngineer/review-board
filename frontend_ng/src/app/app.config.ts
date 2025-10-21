@@ -6,10 +6,10 @@ import {
   provideZonelessChangeDetection,
   inject,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideApollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
@@ -25,11 +25,23 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch()),
     provideApollo(() => {
+      const router = inject(Router);
       const httpLink = inject(HttpLink);
-      const http = httpLink.create({ uri: 'http://localhost:8080/query' });
+      const http = httpLink.create({ uri: 'http://localhost:8080/query', withCredentials: true });
 
       const error = new ErrorLink((options) => {
-        console.log('Error occurred:', options.result?.errors);
+      
+        if (options.result?.errors) {
+          for (const error of options.result.errors) {
+              console.log('Error occurred:', error.path);
+            if (error.extensions) {
+              if (error.extensions['code'] === 401) {
+                router.navigate(['entry']);
+                break;
+              }
+            }
+          }
+        }
       });
       const link = error.concat(http);
 

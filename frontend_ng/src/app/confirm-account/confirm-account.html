@@ -1,0 +1,24 @@
+<div tuiPlatform="web" id="container">
+  <div tuiAppearance="floating" tuiCardLarge>
+    <header tuiHeader>
+      <h2 tuiTitle>Confirmation Code</h2>
+    </header>
+
+    <section>
+      <tui-textfield tuiTextfieldSize="l" [style.text-transform]="'uppercase'">
+        <input
+          autocapitalize="characters"
+          inputmode="text"
+          mask="^[a-zA-Z0-9]+$"
+          maxlength="6"
+          tuiInputPin
+          [(ngModel)]="value"
+        />
+      </tui-textfield>
+    </section>
+
+    <footer>
+      <button appearance="secondary" size="m" tuiButton type="button">Send</button>
+    </footer>
+  </div>
+</div>

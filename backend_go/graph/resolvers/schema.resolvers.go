@@ -6,15 +6,24 @@ package graph
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	graph "github.com/MustafaTheEngineer/review_board/graph/generated"
 	"github.com/MustafaTheEngineer/review_board/graph/model"
+	"github.com/MustafaTheEngineer/review_board/helpers"
+	"github.com/MustafaTheEngineer/review_board/types"
 )
 
 // ValidateToken is the resolver for the validateToken field.
 func (r *queryResolver) ValidateToken(ctx context.Context) (*model.TokenValidationResponse, error) {
+	userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+	if !ok {
+		helpers.CreateGraphQLError(ctx, "Username check requires authentication", http.StatusUnauthorized)
+		return nil, fmt.Errorf("unauthorized")
+	}
 	return &model.TokenValidationResponse{
-		Valid: true,
+		User: &userContext.User,
 	}, nil
 }
 

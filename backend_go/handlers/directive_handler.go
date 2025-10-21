@@ -7,7 +7,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	apiConfig "github.com/MustafaTheEngineer/review_board/config/api"
-	"github.com/MustafaTheEngineer/review_board/internal/database"
+	"github.com/MustafaTheEngineer/review_board/types"
 	"github.com/google/uuid"
 
 	dbConfig "github.com/MustafaTheEngineer/review_board/config/db"
@@ -15,10 +15,6 @@ import (
 	"github.com/MustafaTheEngineer/review_board/helpers"
 	"github.com/golang-jwt/jwt/v5"
 )
-
-type contextKey string
-
-const userContextKey contextKey = "user"
 
 func defineDirectives(c *generated.Config) {
 	c.Directives.ValidateEmail = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
@@ -45,25 +41,26 @@ func defineDirectives(c *generated.Config) {
 
 	c.Directives.ValidateToken = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
 		rawCookies := graphql.GetOperationContext(ctx).Headers.Get("Cookie")
-		cookies, err := http.ParseCookie(rawCookies)
-
-		if err != nil {
-			helpers.CreateGraphQLError(ctx, "Invalid token", http.StatusUnauthorized)
-			return nil, err
+		fmt.Println("Raw Cookies:", rawCookies) // Debug print
+		if rawCookies == "" {
+			helpers.CreateGraphQLError(ctx, "No cookies provided", http.StatusUnauthorized)
+			return nil, fmt.Errorf("no cookies provided")
 		}
-		var authToken *string
+		cookies := (&http.Request{Header: http.Header{"Cookie": []string{rawCookies}}}).Cookies()
+
+		var authToken string
 		for _, cookie := range cookies {
 			if cookie.Name == "auth_token" {
-				authToken = &cookie.Value
+				authToken = cookie.Value
 			}
 		}
 
-		if authToken == nil || *authToken == "" {
+		if authToken == "" {
 			helpers.CreateGraphQLError(ctx, "Missing or expired token", http.StatusUnauthorized)
 			return nil, err
 		}
 
-		token, err := jwt.Parse(*authToken, func(token *jwt.Token) (any, error) {
+		token, err := jwt.Parse(authToken, func(token *jwt.Token) (any, error) {
 			return []byte(apiConfig.ApiCfg.JWTSecret), nil
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
@@ -83,7 +80,7 @@ func defineDirectives(c *generated.Config) {
 				helpers.CreateGraphQLError(ctx, "Error while validating token", http.StatusInternalServerError)
 				return nil, err
 			}
-			ctx := context.WithValue(ctx, userContextKey, user)
+			ctx := context.WithValue(ctx, types.UserContextKey, types.UserContext{User: user})
 			return next(ctx)
 
 		} else {
@@ -93,17 +90,13 @@ func defineDirectives(c *generated.Config) {
 	}
 
 	c.Directives.CheckUsername = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
-		userContext := ctx.Value(userContextKey)
-		if userContext == nil {
+		userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+		if !ok {
 			helpers.CreateGraphQLError(ctx, "Username check requires authentication", http.StatusUnauthorized)
 			return nil, fmt.Errorf("unauthorized")
 		}
-		user, ok := userContext.(database.User)
-		if !ok {
-			helpers.CreateGraphQLError(ctx, "Invalid user context", http.StatusUnauthorized)
-			return nil, fmt.Errorf("invalid user context")
-		}
-		if !user.Username.Valid {
+
+		if !userContext.User.Username.Valid {
 			helpers.CreateGraphQLError(ctx, "Username is not provided", http.StatusBadRequest)
 			return nil, fmt.Errorf("username is not provided")
 		}

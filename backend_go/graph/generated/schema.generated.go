@@ -80,8 +80,8 @@ func (ec *executionContext) fieldContext_Query_validateToken(_ context.Context, 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "valid":
-				return ec.fieldContext_TokenValidationResponse_valid(ctx, field)
+			case "user":
+				return ec.fieldContext_TokenValidationResponse_user(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TokenValidationResponse", field.Name)
 		},
@@ -197,30 +197,42 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _TokenValidationResponse_valid(ctx context.Context, field graphql.CollectedField, obj *model.TokenValidationResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _TokenValidationResponse_user(ctx context.Context, field graphql.CollectedField, obj *model.TokenValidationResponse) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_TokenValidationResponse_valid,
+		ec.fieldContext_TokenValidationResponse_user,
 		func(ctx context.Context) (any, error) {
-			return obj.Valid, nil
+			return obj.User, nil
 		},
 		nil,
-		ec.marshalNBoolean2bool,
+		ec.marshalNUser2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐUser,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_TokenValidationResponse_valid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_TokenValidationResponse_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TokenValidationResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "confirmed":
+				return ec.fieldContext_User_confirmed(ctx, field)
+			case "blocked":
+				return ec.fieldContext_User_blocked(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -321,8 +333,8 @@ func (ec *executionContext) _TokenValidationResponse(ctx context.Context, sel as
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TokenValidationResponse")
-		case "valid":
-			out.Values[i] = ec._TokenValidationResponse_valid(ctx, field, obj)
+		case "user":
+			out.Values[i] = ec._TokenValidationResponse_user(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
