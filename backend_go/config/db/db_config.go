@@ -20,8 +20,6 @@ func NewDbConfig() {
 		panic("DB_URL environment variable is not set")
 	}
 
-	
-
 	db, err := sql.Open("postgres", dbUrl)
 	if err != nil {
 		panic(err)
