@@ -45,10 +45,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	ApiResponse struct {
-		Code    func(childComplexity int) int
 		Data    func(childComplexity int) int
 		Message func(childComplexity int) int
-		Status  func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -61,15 +59,13 @@ type ComplexityRoot struct {
 	}
 
 	RegisterUserResponse struct {
-		Metadata func(childComplexity int) int
-		Token    func(childComplexity int) int
-		User     func(childComplexity int) int
+		Message func(childComplexity int) int
+		User    func(childComplexity int) int
 	}
 
 	SignInResponse struct {
-		Metadata func(childComplexity int) int
-		Token    func(childComplexity int) int
-		User     func(childComplexity int) int
+		Message func(childComplexity int) int
+		User    func(childComplexity int) int
 	}
 
 	User struct {
@@ -100,13 +96,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
-	case "ApiResponse.code":
-		if e.complexity.ApiResponse.Code == nil {
-			break
-		}
-
-		return e.complexity.ApiResponse.Code(childComplexity), true
-
 	case "ApiResponse.data":
 		if e.complexity.ApiResponse.Data == nil {
 			break
@@ -120,13 +109,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ApiResponse.Message(childComplexity), true
-
-	case "ApiResponse.status":
-		if e.complexity.ApiResponse.Status == nil {
-			break
-		}
-
-		return e.complexity.ApiResponse.Status(childComplexity), true
 
 	case "Mutation.registerUser":
 		if e.complexity.Mutation.RegisterUser == nil {
@@ -164,19 +146,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
 
-	case "RegisterUserResponse.metadata":
-		if e.complexity.RegisterUserResponse.Metadata == nil {
+	case "RegisterUserResponse.message":
+		if e.complexity.RegisterUserResponse.Message == nil {
 			break
 		}
 
-		return e.complexity.RegisterUserResponse.Metadata(childComplexity), true
-
-	case "RegisterUserResponse.token":
-		if e.complexity.RegisterUserResponse.Token == nil {
-			break
-		}
-
-		return e.complexity.RegisterUserResponse.Token(childComplexity), true
+		return e.complexity.RegisterUserResponse.Message(childComplexity), true
 
 	case "RegisterUserResponse.user":
 		if e.complexity.RegisterUserResponse.User == nil {
@@ -185,19 +160,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.RegisterUserResponse.User(childComplexity), true
 
-	case "SignInResponse.metadata":
-		if e.complexity.SignInResponse.Metadata == nil {
+	case "SignInResponse.message":
+		if e.complexity.SignInResponse.Message == nil {
 			break
 		}
 
-		return e.complexity.SignInResponse.Metadata(childComplexity), true
-
-	case "SignInResponse.token":
-		if e.complexity.SignInResponse.Token == nil {
-			break
-		}
-
-		return e.complexity.SignInResponse.Token(childComplexity), true
+		return e.complexity.SignInResponse.Message(childComplexity), true
 
 	case "SignInResponse.user":
 		if e.complexity.SignInResponse.User == nil {
@@ -356,21 +324,9 @@ scalar Any
 scalar UUID
 scalar Int64
 
-enum RequestStatus {
-  ERROR
-  SUCCESS
-}
-
 type ApiResponse {
-  code: Int!     
-	status: RequestStatus!
 	message: String!
 	data: Any
-}
-
-interface MetaAndToken {
-  metadata: ApiResponse!
-  token: String!
 }`, BuiltIn: false},
 	{Name: "../user.graphqls", Input: `type User {
   email: String!
@@ -395,10 +351,9 @@ input NewUser {
   password: String!
 }
 
-type RegisterUserResponse implements MetaAndToken {
-  metadata: ApiResponse!
+type RegisterUserResponse {
+  message: String!
   user: User!
-  token: String!
 }
 
 input SignInInput {
@@ -406,10 +361,9 @@ input SignInInput {
   password: String!
 }
 
-type SignInResponse implements MetaAndToken {
-  metadata: ApiResponse!
+type SignInResponse {
+  message: String!
   user: User!
-  token: String!
 }
 
 type Query {

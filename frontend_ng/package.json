@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:backend_ng": "node dist/backend_ng/server/server.mjs",
+    "serve:ssr:frontend_ng": "node dist/frontend_ng/server/server.mjs",
     "generate": "graphql-codegen"
   },
   "prettier": {

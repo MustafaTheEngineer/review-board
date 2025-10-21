@@ -6,19 +6,7 @@ scalar Any
 scalar UUID
 scalar Int64
 
-enum RequestStatus {
-  ERROR
-  SUCCESS
-}
-
 type ApiResponse {
-  code: Int!     
-	status: RequestStatus!
 	message: String!
 	data: Any
-}
-
-interface MetaAndToken {
-  metadata: ApiResponse!
-  token: String!
 }

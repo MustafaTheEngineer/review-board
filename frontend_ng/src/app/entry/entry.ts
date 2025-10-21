@@ -1,8 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { gql } from 'apollo-angular';
+import { Apollo, gql } from 'apollo-angular';
 import { RegisterUserGQL, SignInGQL } from '../../graphql/generated';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { combineLatest, map, startWith } from 'rxjs';
+import { catchError, combineLatest, map, of, startWith } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   TuiAppearance,
@@ -14,6 +14,7 @@ import {
 } from '@taiga-ui/core';
 import { TuiFieldErrorPipe, TuiSegmented, TuiSwitch, TuiTooltip } from '@taiga-ui/kit';
 import { TuiCardLarge, TuiForm, TuiHeader } from '@taiga-ui/layout';
+import { error } from 'console';
 
 @Component({
   selector: 'app-entry',
@@ -44,6 +45,7 @@ import { TuiCardLarge, TuiForm, TuiHeader } from '@taiga-ui/layout';
 export class Entry {
   registerUserGQL = inject(RegisterUserGQL);
   signInGQL = inject(SignInGQL);
+  apollo = inject(Apollo);
 
   registerOrSignIn = signal(true);
 
@@ -52,15 +54,15 @@ export class Entry {
   }
 
   form = new FormGroup({
-    email: new FormControl('', {
+    email: new FormControl('mustafaesat01@gmail.com', {
       nonNullable: true,
       validators: [Validators.required, Validators.email],
     }),
-    password: new FormControl('', {
+    password: new FormControl('123456789', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(8)],
     }),
-    confirmPassword: new FormControl('', {
+    confirmPassword: new FormControl('123456789', {
       nonNullable: true,
       validators: [Validators.required],
     }),
@@ -112,6 +114,9 @@ export class Entry {
       [this.form.controls.password.valueChanges, this.form.controls.confirmPassword.valueChanges],
       (password, confirmPassword) => password === confirmPassword,
     ),
+    {
+      initialValue: true,
+    },
   );
   passwordMatchErr = computed(() => {
     const passwordConfirmed = this.passwordConfirmed();
@@ -156,12 +161,7 @@ export class Entry {
 const REGISTER_USER = gql`
   mutation RegisterUser($input: NewUser!) {
     registerUser(input: $input) {
-      metadata {
-        code
-        status
-        message
-        data
-      }
+      message
       user {
         email
         username
@@ -169,7 +169,6 @@ const REGISTER_USER = gql`
         blocked
         role
       }
-      token
     }
   }
 `;
@@ -177,12 +176,7 @@ const REGISTER_USER = gql`
 const SIGNIN_USER = gql`
   mutation SignIn($input: SignInInput!) {
     signIn(input: $input) {
-      metadata {
-        code
-        status
-        message
-        data
-      }
+      message
       user {
         email
         username
@@ -190,7 +184,6 @@ const SIGNIN_USER = gql`
         blocked
         role
       }
-      token
     }
   }
 `;

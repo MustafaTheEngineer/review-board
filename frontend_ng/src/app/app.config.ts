@@ -13,7 +13,8 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideApollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
-import { InMemoryCache } from '@apollo/client';
+import { ApolloLink, InMemoryCache } from '@apollo/client';
+import { ErrorLink } from '@apollo/client/link/error';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,11 +26,15 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch()),
     provideApollo(() => {
       const httpLink = inject(HttpLink);
+      const http = httpLink.create({ uri: 'http://localhost:8080/query' });
+
+      const error = new ErrorLink((options) => {
+        console.log('Error occurred:', options.result?.errors);
+      });
+      const link = error.concat(http);
 
       return {
-        link: httpLink.create({
-          uri: 'http://localhost:8080/query',
-        }),
+        link,
         cache: new InMemoryCache(),
       };
     }),

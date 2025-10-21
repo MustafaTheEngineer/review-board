@@ -1,8 +1,10 @@
 package helpers
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"net/http"
 	"time"
 
 	apiConfig "github.com/MustafaTheEngineer/review_board/config/api"
@@ -35,4 +37,14 @@ func GenerateJWT(userID string, userRole string) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+type contextKey string
+const ResponseWriterKey contextKey = "responseWriter"
+
+func WithResponseWriter(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), ResponseWriterKey, w)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

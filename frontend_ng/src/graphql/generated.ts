@@ -22,15 +22,8 @@ export type Scalars = {
 
 export type ApiResponse = {
   __typename?: 'ApiResponse';
-  code: Scalars['Int']['output'];
   data?: Maybe<Scalars['Any']['output']>;
   message: Scalars['String']['output'];
-  status: RequestStatus;
-};
-
-export type MetaAndToken = {
-  metadata: ApiResponse;
-  token: Scalars['String']['output'];
 };
 
 export type Mutation = {
@@ -64,27 +57,20 @@ export type QueryUserArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type RegisterUserResponse = MetaAndToken & {
+export type RegisterUserResponse = {
   __typename?: 'RegisterUserResponse';
-  metadata: ApiResponse;
-  token: Scalars['String']['output'];
+  message: Scalars['String']['output'];
   user: User;
 };
-
-export enum RequestStatus {
-  Error = 'ERROR',
-  Success = 'SUCCESS'
-}
 
 export type SignInInput = {
   email: Scalars['String']['input'];
   password: Scalars['String']['input'];
 };
 
-export type SignInResponse = MetaAndToken & {
+export type SignInResponse = {
   __typename?: 'SignInResponse';
-  metadata: ApiResponse;
-  token: Scalars['String']['output'];
+  message: Scalars['String']['output'];
   user: User;
 };
 
@@ -102,24 +88,19 @@ export type RegisterUserMutationVariables = Exact<{
 }>;
 
 
-export type RegisterUserMutation = { __typename?: 'Mutation', registerUser: { __typename?: 'RegisterUserResponse', token: string, metadata: { __typename?: 'ApiResponse', code: number, status: RequestStatus, message: string, data?: any | null }, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+export type RegisterUserMutation = { __typename?: 'Mutation', registerUser: { __typename?: 'RegisterUserResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
 
 export type SignInMutationVariables = Exact<{
   input: SignInInput;
 }>;
 
 
-export type SignInMutation = { __typename?: 'Mutation', signIn: { __typename?: 'SignInResponse', token: string, metadata: { __typename?: 'ApiResponse', code: number, status: RequestStatus, message: string, data?: any | null }, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+export type SignInMutation = { __typename?: 'Mutation', signIn: { __typename?: 'SignInResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
 
 export const RegisterUserDocument = gql`
     mutation RegisterUser($input: NewUser!) {
   registerUser(input: $input) {
-    metadata {
-      code
-      status
-      message
-      data
-    }
+    message
     user {
       email
       username
@@ -127,7 +108,6 @@ export const RegisterUserDocument = gql`
       blocked
       role
     }
-    token
   }
 }
     `;
@@ -145,12 +125,7 @@ export const RegisterUserDocument = gql`
 export const SignInDocument = gql`
     mutation SignIn($input: SignInInput!) {
   signIn(input: $input) {
-    metadata {
-      code
-      status
-      message
-      data
-    }
+    message
     user {
       email
       username
@@ -158,7 +133,6 @@ export const SignInDocument = gql`
       blocked
       role
     }
-    token
   }
 }
     `;

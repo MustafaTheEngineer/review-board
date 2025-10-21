@@ -5,7 +5,6 @@ package graph
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"sync/atomic"
 
@@ -27,64 +26,6 @@ import (
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
-
-func (ec *executionContext) _ApiResponse_code(ctx context.Context, field graphql.CollectedField, obj *model.APIResponse) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ApiResponse_code,
-		func(ctx context.Context) (any, error) {
-			return obj.Code, nil
-		},
-		nil,
-		ec.marshalNInt2int32,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_ApiResponse_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ApiResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ApiResponse_status(ctx context.Context, field graphql.CollectedField, obj *model.APIResponse) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_ApiResponse_status,
-		func(ctx context.Context) (any, error) {
-			return obj.Status, nil
-		},
-		nil,
-		ec.marshalNRequestStatus2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐRequestStatus,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_ApiResponse_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ApiResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type RequestStatus does not have child fields")
-		},
-	}
-	return fc, nil
-}
 
 func (ec *executionContext) _ApiResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.APIResponse) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
@@ -152,29 +93,6 @@ func (ec *executionContext) fieldContext_ApiResponse_data(_ context.Context, fie
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _MetaAndToken(ctx context.Context, sel ast.SelectionSet, obj model.MetaAndToken) graphql.Marshaler {
-	switch obj := (obj).(type) {
-	case nil:
-		return graphql.Null
-	case model.SignInResponse:
-		return ec._SignInResponse(ctx, sel, &obj)
-	case *model.SignInResponse:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._SignInResponse(ctx, sel, obj)
-	case model.RegisterUserResponse:
-		return ec._RegisterUserResponse(ctx, sel, &obj)
-	case *model.RegisterUserResponse:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._RegisterUserResponse(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
@@ -190,16 +108,6 @@ func (ec *executionContext) _ApiResponse(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ApiResponse")
-		case "code":
-			out.Values[i] = ec._ApiResponse_code(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "status":
-			out.Values[i] = ec._ApiResponse_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "message":
 			out.Values[i] = ec._ApiResponse_message(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -233,26 +141,6 @@ func (ec *executionContext) _ApiResponse(ctx context.Context, sel ast.SelectionS
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
-
-func (ec *executionContext) marshalNApiResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐAPIResponse(ctx context.Context, sel ast.SelectionSet, v *model.APIResponse) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._ApiResponse(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNRequestStatus2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐRequestStatus(ctx context.Context, v any) (model.RequestStatus, error) {
-	var res model.RequestStatus
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNRequestStatus2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐRequestStatus(ctx context.Context, sel ast.SelectionSet, v model.RequestStatus) graphql.Marshaler {
-	return v
-}
 
 func (ec *executionContext) unmarshalOAny2interface(ctx context.Context, v any) (any, error) {
 	if v == nil {

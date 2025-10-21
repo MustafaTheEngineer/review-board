@@ -9,5 +9,5 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.less'
 })
 export class App {
-  protected readonly title = signal('backend_ng');
+  protected readonly title = signal('frontend_ng');
 }

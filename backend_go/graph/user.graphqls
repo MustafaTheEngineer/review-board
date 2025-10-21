@@ -21,10 +21,9 @@ input NewUser {
   password: String!
 }
 
-type RegisterUserResponse implements MetaAndToken {
-  metadata: ApiResponse!
+type RegisterUserResponse {
+  message: String!
   user: User!
-  token: String!
 }
 
 input SignInInput {
@@ -32,10 +31,9 @@ input SignInInput {
   password: String!
 }
 
-type SignInResponse implements MetaAndToken {
-  metadata: ApiResponse!
+type SignInResponse {
+  message: String!
   user: User!
-  token: String!
 }
 
 type Query {

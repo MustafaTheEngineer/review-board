@@ -131,12 +131,10 @@ func (ec *executionContext) fieldContext_Mutation_registerUser(ctx context.Conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_RegisterUserResponse_metadata(ctx, field)
+			case "message":
+				return ec.fieldContext_RegisterUserResponse_message(ctx, field)
 			case "user":
 				return ec.fieldContext_RegisterUserResponse_user(ctx, field)
-			case "token":
-				return ec.fieldContext_RegisterUserResponse_token(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RegisterUserResponse", field.Name)
 		},
@@ -200,12 +198,10 @@ func (ec *executionContext) fieldContext_Mutation_signIn(ctx context.Context, fi
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_SignInResponse_metadata(ctx, field)
+			case "message":
+				return ec.fieldContext_SignInResponse_message(ctx, field)
 			case "user":
 				return ec.fieldContext_SignInResponse_user(ctx, field)
-			case "token":
-				return ec.fieldContext_SignInResponse_token(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SignInResponse", field.Name)
 		},
@@ -373,40 +369,30 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _RegisterUserResponse_metadata(ctx context.Context, field graphql.CollectedField, obj *model.RegisterUserResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _RegisterUserResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.RegisterUserResponse) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RegisterUserResponse_metadata,
+		ec.fieldContext_RegisterUserResponse_message,
 		func(ctx context.Context) (any, error) {
-			return obj.Metadata, nil
+			return obj.Message, nil
 		},
 		nil,
-		ec.marshalNApiResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐAPIResponse,
+		ec.marshalNString2string,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_RegisterUserResponse_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RegisterUserResponse_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RegisterUserResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "code":
-				return ec.fieldContext_ApiResponse_code(ctx, field)
-			case "status":
-				return ec.fieldContext_ApiResponse_status(ctx, field)
-			case "message":
-				return ec.fieldContext_ApiResponse_message(ctx, field)
-			case "data":
-				return ec.fieldContext_ApiResponse_data(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ApiResponse", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -453,14 +439,14 @@ func (ec *executionContext) fieldContext_RegisterUserResponse_user(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _RegisterUserResponse_token(ctx context.Context, field graphql.CollectedField, obj *model.RegisterUserResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _SignInResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.SignInResponse) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_RegisterUserResponse_token,
+		ec.fieldContext_SignInResponse_message,
 		func(ctx context.Context) (any, error) {
-			return obj.Token, nil
+			return obj.Message, nil
 		},
 		nil,
 		ec.marshalNString2string,
@@ -469,53 +455,14 @@ func (ec *executionContext) _RegisterUserResponse_token(ctx context.Context, fie
 	)
 }
 
-func (ec *executionContext) fieldContext_RegisterUserResponse_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "RegisterUserResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SignInResponse_metadata(ctx context.Context, field graphql.CollectedField, obj *model.SignInResponse) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_SignInResponse_metadata,
-		func(ctx context.Context) (any, error) {
-			return obj.Metadata, nil
-		},
-		nil,
-		ec.marshalNApiResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐAPIResponse,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_SignInResponse_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SignInResponse_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SignInResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "code":
-				return ec.fieldContext_ApiResponse_code(ctx, field)
-			case "status":
-				return ec.fieldContext_ApiResponse_status(ctx, field)
-			case "message":
-				return ec.fieldContext_ApiResponse_message(ctx, field)
-			case "data":
-				return ec.fieldContext_ApiResponse_data(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ApiResponse", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -557,35 +504,6 @@ func (ec *executionContext) fieldContext_SignInResponse_user(_ context.Context, 
 				return ec.fieldContext_User_role(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SignInResponse_token(ctx context.Context, field graphql.CollectedField, obj *model.SignInResponse) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_SignInResponse_token,
-		func(ctx context.Context) (any, error) {
-			return obj.Token, nil
-		},
-		nil,
-		ec.marshalNString2string,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_SignInResponse_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SignInResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -944,7 +862,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var registerUserResponseImplementors = []string{"RegisterUserResponse", "MetaAndToken"}
+var registerUserResponseImplementors = []string{"RegisterUserResponse"}
 
 func (ec *executionContext) _RegisterUserResponse(ctx context.Context, sel ast.SelectionSet, obj *model.RegisterUserResponse) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, registerUserResponseImplementors)
@@ -955,18 +873,13 @@ func (ec *executionContext) _RegisterUserResponse(ctx context.Context, sel ast.S
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RegisterUserResponse")
-		case "metadata":
-			out.Values[i] = ec._RegisterUserResponse_metadata(ctx, field, obj)
+		case "message":
+			out.Values[i] = ec._RegisterUserResponse_message(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "user":
 			out.Values[i] = ec._RegisterUserResponse_user(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "token":
-			out.Values[i] = ec._RegisterUserResponse_token(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -993,7 +906,7 @@ func (ec *executionContext) _RegisterUserResponse(ctx context.Context, sel ast.S
 	return out
 }
 
-var signInResponseImplementors = []string{"SignInResponse", "MetaAndToken"}
+var signInResponseImplementors = []string{"SignInResponse"}
 
 func (ec *executionContext) _SignInResponse(ctx context.Context, sel ast.SelectionSet, obj *model.SignInResponse) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, signInResponseImplementors)
@@ -1004,18 +917,13 @@ func (ec *executionContext) _SignInResponse(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("SignInResponse")
-		case "metadata":
-			out.Values[i] = ec._SignInResponse_metadata(ctx, field, obj)
+		case "message":
+			out.Values[i] = ec._SignInResponse_message(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "user":
 			out.Values[i] = ec._SignInResponse_user(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "token":
-			out.Values[i] = ec._SignInResponse_token(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

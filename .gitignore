@@ -8,42 +8,42 @@ backend_go/.env
 backend_go/sqlc.yaml
 
 # Compiled output
-backend_ng/dist
-backend_ng/tmp
-backend_ng/out-tsc
-backend_ng/bazel-out
+frontend_ng/dist
+frontend_ng/tmp
+frontend_ng/out-tsc
+frontend_ng/bazel-out
 
 # Node
-backend_ng/node_modules
-backend_ng/npm-debug.log
-backend_ng/yarn-error.log
+frontend_ng/node_modules
+frontend_ng/npm-debug.log
+frontend_ng/yarn-error.log
 
 # IDEs and editors
-backend_ng/.idea/
-backend_ng/.project
-backend_ng/.classpath
-backend_ng/.c9/
-backend_ng/*.launch
-backend_ng/.settings/
-backend_ng/*.sublime-workspace
+frontend_ng/.idea/
+frontend_ng/.project
+frontend_ng/.classpath
+frontend_ng/.c9/
+frontend_ng/*.launch
+frontend_ng/.settings/
+frontend_ng/*.sublime-workspace
 
 # Visual Studio Code
-backend_ng/.vscode/*
-backend_ng/!.vscode/settings.json
-backend_ng/!.vscode/tasks.json
-backend_ng/!.vscode/launch.json
-backend_ng/!.vscode/extensions.json
-backend_ng/.history/*
+frontend_ng/.vscode/*
+frontend_ng/!.vscode/settings.json
+frontend_ng/!.vscode/tasks.json
+frontend_ng/!.vscode/launch.json
+frontend_ng/!.vscode/extensions.json
+frontend_ng/.history/*
 
 # Miscellaneous
-backend_ng/.angular/cache
-backend_ng/.sass-cache/
-backend_ng/connect.lock
-backend_ng/coverage
-backend_ng/libpeerconnection.log
-backend_ng/testem.log
-backend_ng/typings
+frontend_ng/.angular/cache
+frontend_ng/.sass-cache/
+frontend_ng/connect.lock
+frontend_ng/coverage
+frontend_ng/libpeerconnection.log
+frontend_ng/testem.log
+frontend_ng/typings
 
 # System files
-backend_ng/.DS_Store
-backend_ng/Thumbs.db
+frontend_ng/.DS_Store
+frontend_ng/Thumbs.db

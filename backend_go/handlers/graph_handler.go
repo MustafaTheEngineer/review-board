@@ -12,6 +12,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	generated "github.com/MustafaTheEngineer/review_board/graph/generated"
 	resolvers "github.com/MustafaTheEngineer/review_board/graph/resolvers"
+	"github.com/MustafaTheEngineer/review_board/helpers"
 	"github.com/rs/cors"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -48,10 +49,15 @@ func GraphqlHandler() {
 	mux := http.NewServeMux()
 
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", srv)
+	mux.Handle("/query", helpers.WithResponseWriter(srv))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 
-	handler := cors.Default().Handler(mux)
+	handler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:4200"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "Set-Cookie"},
+		AllowCredentials: true,
+	}).Handler(mux)
 	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
