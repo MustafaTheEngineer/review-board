@@ -35,7 +35,3 @@ type SignInResponse {
   message: String!
   user: User!
 }
-
-type Query {
-  user(id: ID!): String!
-}

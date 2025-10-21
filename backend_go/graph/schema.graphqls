@@ -6,7 +6,13 @@ scalar Any
 scalar UUID
 scalar Int64
 
-type ApiResponse {
-	message: String!
-	data: Any
+directive @validateToken on FIELD_DEFINITION
+directive @checkUsername on FIELD_DEFINITION
+
+type Query {
+  validateToken: TokenValidationResponse! @validateToken
+}
+
+type TokenValidationResponse {
+  valid: Boolean!
 }

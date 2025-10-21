@@ -43,6 +43,37 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, email, username, provider, password_hash, reset_password_token, reset_password_token_expiry, confirmation_token, confirmed, blocked, role, verification_code, verification_code_expiry, deleted, deleted_at, last_login_at, current_login_at, created_at, updated_at FROM users WHERE id = $1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Provider,
+		&i.PasswordHash,
+		&i.ResetPasswordToken,
+		&i.ResetPasswordTokenExpiry,
+		&i.ConfirmationToken,
+		&i.Confirmed,
+		&i.Blocked,
+		&i.Role,
+		&i.VerificationCode,
+		&i.VerificationCodeExpiry,
+		&i.Deleted,
+		&i.DeletedAt,
+		&i.LastLoginAt,
+		&i.CurrentLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const registerUser = `-- name: RegisterUser :one
 INSERT INTO users (id, email, password_hash, verification_code, verification_code_expiry, provider)
 VALUES ($1, $2, $3, $4, $5, $6)

@@ -10,14 +10,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql"
 	dbConfig "github.com/MustafaTheEngineer/review_board/config/db"
 	graph "github.com/MustafaTheEngineer/review_board/graph/generated"
 	"github.com/MustafaTheEngineer/review_board/graph/model"
 	"github.com/MustafaTheEngineer/review_board/helpers"
 	"github.com/MustafaTheEngineer/review_board/internal/database"
 	"github.com/google/uuid"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,13 +25,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 	tx, err := dbConfig.DbCfg.SqlDb.Begin()
 
 	if err != nil {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Failed to start transaction",
-			Extensions: map[string]any{
-				"code": http.StatusInternalServerError,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Failed to start transaction", http.StatusInternalServerError)
 		return nil, err
 	}
 	defer tx.Rollback()
@@ -43,22 +35,10 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 	dbUser, err := qtx.GetUserByEmail(ctx, input.Email)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			graphql.AddError(ctx, &gqlerror.Error{
-				Path:    graphql.GetPath(ctx),
-				Message: "Error while checking if user already exists",
-				Extensions: map[string]any{
-					"code": http.StatusInternalServerError,
-				},
-			})
+			helpers.CreateGraphQLError(ctx, "Error while checking if user already exists", http.StatusInternalServerError)
 		}
 	} else {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "User with this email already exists",
-			Extensions: map[string]any{
-				"code": http.StatusConflict,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "User with this email already exists", http.StatusConflict)
 		return nil, err
 	}
 
@@ -66,26 +46,14 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 	verificationCode, err := helpers.GenerateVerificationCode()
 
 	if err != nil {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Error while generating verification code",
-			Extensions: map[string]any{
-				"code": http.StatusInternalServerError,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Error while generating verification code", http.StatusInternalServerError)
 		return nil, err
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), 14)
 
 	if err != nil {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Error while hashing password",
-			Extensions: map[string]any{
-				"code": http.StatusInternalServerError,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Error while hashing password", http.StatusInternalServerError)
 		return nil, err
 	}
 
@@ -105,32 +73,20 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 	})
 
 	if err != nil {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Error while registering user",
-			Extensions: map[string]any{
-				"code": http.StatusInternalServerError,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Error while registering user", http.StatusInternalServerError)
 		return nil, err
 	}
 
 	jwtInfo, err := helpers.GenerateJWT(userID.String(), string(dbUser.Role))
 
 	if err != nil {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Error while generating JWT",
-			Extensions: map[string]any{
-				"code": http.StatusInternalServerError,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Error while generating JWT", http.StatusInternalServerError)
 		return nil, err
 	}
 
 	if w, ok := ctx.Value(helpers.ResponseWriterKey).(http.ResponseWriter); ok {
 		http.SetCookie(w, &http.Cookie{
-			Name:     "auth-token",
+			Name:     "auth_token",
 			Value:    jwtInfo,
 			HttpOnly: true,
 			Path:     "/",
@@ -138,13 +94,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 			// Secure: true, // Open in production environment
 		})
 	} else {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Error while setting cookie",
-			Extensions: map[string]any{
-				"code": http.StatusInternalServerError,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Error while setting cookie", http.StatusInternalServerError)
 		return nil, err
 	}
 
@@ -160,53 +110,29 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 
 	if err != nil {
 		if err != sql.ErrNoRows {
-			graphql.AddError(ctx, &gqlerror.Error{
-				Path:    graphql.GetPath(ctx),
-				Message: "Error while checking if user already exists",
-				Extensions: map[string]any{
-					"code": http.StatusInternalServerError,
-				},
-			})
+			helpers.CreateGraphQLError(ctx, "Error while checking if user already exists", http.StatusInternalServerError)
 			return nil, err
 		} else {
-			graphql.AddError(ctx, &gqlerror.Error{
-				Path:    graphql.GetPath(ctx),
-				Message: "User not found",
-				Extensions: map[string]any{
-					"code": http.StatusNotFound,
-				},
-			})
+			helpers.CreateGraphQLError(ctx, "User not found", http.StatusNotFound)
 			return nil, err
 		}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.PasswordHash), []byte(input.Password)); err != nil {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Invalid password",
-			Extensions: map[string]any{
-				"code": http.StatusUnauthorized,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Invalid password", http.StatusUnauthorized)
 		return nil, err
 	}
 
 	jwtInfo, err := helpers.GenerateJWT(dbUser.ID.String(), string(dbUser.Role))
 
 	if err != nil {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Error while generating JWT",
-			Extensions: map[string]any{
-				"code": http.StatusInternalServerError,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Error while generating JWT", http.StatusInternalServerError)
 		return nil, err
 	}
 
 	if w, ok := ctx.Value(helpers.ResponseWriterKey).(http.ResponseWriter); ok {
 		http.SetCookie(w, &http.Cookie{
-			Name:     "auth-token",
+			Name:     "auth_token",
 			Value:    jwtInfo,
 			HttpOnly: true,
 			Path:     "/",
@@ -214,13 +140,7 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 			// Secure: true, // Open in production environment
 		})
 	} else {
-		graphql.AddError(ctx, &gqlerror.Error{
-			Path:    graphql.GetPath(ctx),
-			Message: "Error while setting cookie",
-			Extensions: map[string]any{
-				"code": http.StatusInternalServerError,
-			},
-		})
+		helpers.CreateGraphQLError(ctx, "Error while setting cookie", http.StatusInternalServerError)
 		return nil, err
 	}
 
@@ -228,11 +148,6 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 		Message: "User registered successfully",
 		User:    &dbUser,
 	}, err
-}
-
-// User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context, id string) (string, error) {
-	return "trial", nil
 }
 
 // Username is the resolver for the username field.
@@ -251,12 +166,8 @@ func (r *userResolver) Role(ctx context.Context, obj *database.User) (string, er
 // Mutation returns graph.MutationResolver implementation.
 func (r *Resolver) Mutation() graph.MutationResolver { return &mutationResolver{r} }
 
-// Query returns graph.QueryResolver implementation.
-func (r *Resolver) Query() graph.QueryResolver { return &queryResolver{r} }
-
 // User returns graph.UserResolver implementation.
 func (r *Resolver) User() graph.UserResolver { return &userResolver{r} }
 
 type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

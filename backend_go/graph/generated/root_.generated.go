@@ -39,23 +39,20 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	CheckUsername    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	ValidateEmail    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	ValidatePassword func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidateToken    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 }
 
 type ComplexityRoot struct {
-	ApiResponse struct {
-		Data    func(childComplexity int) int
-		Message func(childComplexity int) int
-	}
-
 	Mutation struct {
 		RegisterUser func(childComplexity int, input model.NewUser) int
 		SignIn       func(childComplexity int, input model.SignInInput) int
 	}
 
 	Query struct {
-		User func(childComplexity int, id string) int
+		ValidateToken func(childComplexity int) int
 	}
 
 	RegisterUserResponse struct {
@@ -66,6 +63,10 @@ type ComplexityRoot struct {
 	SignInResponse struct {
 		Message func(childComplexity int) int
 		User    func(childComplexity int) int
+	}
+
+	TokenValidationResponse struct {
+		Valid func(childComplexity int) int
 	}
 
 	User struct {
@@ -96,20 +97,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
-	case "ApiResponse.data":
-		if e.complexity.ApiResponse.Data == nil {
-			break
-		}
-
-		return e.complexity.ApiResponse.Data(childComplexity), true
-
-	case "ApiResponse.message":
-		if e.complexity.ApiResponse.Message == nil {
-			break
-		}
-
-		return e.complexity.ApiResponse.Message(childComplexity), true
-
 	case "Mutation.registerUser":
 		if e.complexity.Mutation.RegisterUser == nil {
 			break
@@ -134,17 +121,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.SignIn(childComplexity, args["input"].(model.SignInInput)), true
 
-	case "Query.user":
-		if e.complexity.Query.User == nil {
+	case "Query.validateToken":
+		if e.complexity.Query.ValidateToken == nil {
 			break
 		}
 
-		args, err := ec.field_Query_user_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.ValidateToken(childComplexity), true
 
 	case "RegisterUserResponse.message":
 		if e.complexity.RegisterUserResponse.Message == nil {
@@ -173,6 +155,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SignInResponse.User(childComplexity), true
+
+	case "TokenValidationResponse.valid":
+		if e.complexity.TokenValidationResponse.Valid == nil {
+			break
+		}
+
+		return e.complexity.TokenValidationResponse.Valid(childComplexity), true
 
 	case "User.blocked":
 		if e.complexity.User.Blocked == nil {
@@ -324,10 +313,17 @@ scalar Any
 scalar UUID
 scalar Int64
 
-type ApiResponse {
-	message: String!
-	data: Any
-}`, BuiltIn: false},
+directive @validateToken on FIELD_DEFINITION
+directive @checkUsername on FIELD_DEFINITION
+
+type Query {
+  validateToken: TokenValidationResponse! @validateToken
+}
+
+type TokenValidationResponse {
+  valid: Boolean!
+}
+`, BuiltIn: false},
 	{Name: "../user.graphqls", Input: `type User {
   email: String!
   username: String
@@ -364,11 +360,6 @@ input SignInInput {
 type SignInResponse {
   message: String!
   user: User!
-}
-
-type Query {
-  user(id: ID!): String!
-}
-`, BuiltIn: false},
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)

@@ -4,11 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	apiConfig "github.com/MustafaTheEngineer/review_board/config/api"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 func GenerateVerificationCode() (string, error) {
@@ -29,7 +32,6 @@ func GenerateJWT(userID string, userRole string) (string, error) {
 		"exp":  tokenExpiry,
 	})
 
-
 	// Sign and get the complete encoded token as a string
 	tokenString, err := token.SignedString([]byte(apiConfig.ApiCfg.JWTSecret))
 	if err != nil {
@@ -40,6 +42,7 @@ func GenerateJWT(userID string, userRole string) (string, error) {
 }
 
 type contextKey string
+
 const ResponseWriterKey contextKey = "responseWriter"
 
 func WithResponseWriter(next http.Handler) http.Handler {
@@ -47,4 +50,15 @@ func WithResponseWriter(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), ResponseWriterKey, w)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func CreateGraphQLError(ctx context.Context, message string, code int) error {
+	graphql.AddError(ctx, &gqlerror.Error{
+		Path:    graphql.GetPath(ctx),
+		Message: message,
+		Extensions: map[string]any{
+			"code": code,
+		},
+	})
+	return fmt.Errorf("%s", message)
 }

@@ -6,11 +6,6 @@ import (
 	"github.com/MustafaTheEngineer/review_board/internal/database"
 )
 
-type APIResponse struct {
-	Message string `json:"message"`
-	Data    any    `json:"data,omitempty"`
-}
-
 type Mutation struct {
 }
 
@@ -35,4 +30,8 @@ type SignInInput struct {
 type SignInResponse struct {
 	Message string         `json:"message"`
 	User    *database.User `json:"user"`
+}
+
+type TokenValidationResponse struct {
+	Valid bool `json:"valid"`
 }
