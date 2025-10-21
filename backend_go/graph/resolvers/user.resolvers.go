@@ -7,14 +7,17 @@ package graph
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	dbConfig "github.com/MustafaTheEngineer/review_board/config/db"
 	graph "github.com/MustafaTheEngineer/review_board/graph/generated"
 	"github.com/MustafaTheEngineer/review_board/graph/model"
 	"github.com/MustafaTheEngineer/review_board/helpers"
 	"github.com/MustafaTheEngineer/review_board/internal/database"
+	"github.com/MustafaTheEngineer/review_board/types"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,7 +29,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Failed to start transaction", http.StatusInternalServerError)
-		return nil, err
+		return nil, nil
 	}
 	defer tx.Rollback()
 
@@ -39,7 +42,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 		}
 	} else {
 		helpers.CreateGraphQLError(ctx, "User with this email already exists", http.StatusConflict)
-		return nil, err
+		return nil, nil
 	}
 
 	userID := uuid.New()
@@ -47,14 +50,14 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while generating verification code", http.StatusInternalServerError)
-		return nil, err
+		return nil, nil
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), 14)
 
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while hashing password", http.StatusInternalServerError)
-		return nil, err
+		return nil, nil
 	}
 
 	dbUser, err = qtx.RegisterUser(ctx, database.RegisterUserParams{
@@ -74,14 +77,14 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while registering user", http.StatusInternalServerError)
-		return nil, err
+		return nil, nil
 	}
 
 	jwtInfo, err := helpers.GenerateJWT(userID.String(), string(dbUser.Role))
 
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while generating JWT", http.StatusInternalServerError)
-		return nil, err
+		return nil, nil
 	}
 
 	if w, ok := ctx.Value(helpers.ResponseWriterKey).(http.ResponseWriter); ok {
@@ -95,7 +98,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 		})
 	} else {
 		helpers.CreateGraphQLError(ctx, "Error while setting cookie", http.StatusInternalServerError)
-		return nil, err
+		return nil, nil
 	}
 
 	return &model.RegisterUserResponse{
@@ -111,23 +114,23 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 	if err != nil {
 		if err != sql.ErrNoRows {
 			helpers.CreateGraphQLError(ctx, "Error while checking if user already exists", http.StatusInternalServerError)
-			return nil, err
+			return nil, nil
 		} else {
 			helpers.CreateGraphQLError(ctx, "User not found", http.StatusNotFound)
-			return nil, err
+			return nil, nil
 		}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.PasswordHash), []byte(input.Password)); err != nil {
 		helpers.CreateGraphQLError(ctx, "Invalid password", http.StatusUnauthorized)
-		return nil, err
+		return nil, nil
 	}
 
 	jwtInfo, err := helpers.GenerateJWT(dbUser.ID.String(), string(dbUser.Role))
 
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while generating JWT", http.StatusInternalServerError)
-		return nil, err
+		return nil, nil
 	}
 
 	if w, ok := ctx.Value(helpers.ResponseWriterKey).(http.ResponseWriter); ok {
@@ -141,13 +144,47 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 		})
 	} else {
 		helpers.CreateGraphQLError(ctx, "Error while setting cookie", http.StatusInternalServerError)
-		return nil, err
+		return nil, nil
 	}
 
 	return &model.SignInResponse{
 		Message: "User registered successfully",
 		User:    &dbUser,
-	}, err
+	}, nil
+}
+
+// ConfirmUser is the resolver for the confirmUser field.
+func (r *mutationResolver) ConfirmUser(ctx context.Context, input model.ConfirmUserInput) (*model.ConfirmUserResponse, error) {
+	code := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["confirmationCode"].(string)
+	err := helpers.V.VarWithKey("code", code, "len=6")
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Invalid confirmation code", http.StatusBadRequest)
+		return nil, nil
+	}
+
+	userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+	if !ok {
+		helpers.CreateGraphQLError(ctx, "Username check requires authentication", http.StatusUnauthorized)
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	user, err := dbConfig.DbCfg.Queries.ConfirmUser(ctx, database.ConfirmUserParams{
+		ID:       userContext.User.ID,
+		Provider: "email",
+		VerificationCode: sql.NullString{
+			String: input.ConfirmationCode,
+			Valid:  true,
+		},
+	})
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Invalid confirmation code", http.StatusBadRequest)
+		return nil, nil
+	}
+
+	return &model.ConfirmUserResponse{
+		Message: "User confirmed successfully",
+		User:    &user,
+	}, nil
 }
 
 // Username is the resolver for the username field.

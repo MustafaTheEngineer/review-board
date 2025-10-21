@@ -12,13 +12,15 @@
           mask="^[a-zA-Z0-9]+$"
           maxlength="6"
           tuiInputPin
-          [(ngModel)]="value"
+          [formControl]="value"
         />
       </tui-textfield>
     </section>
 
     <footer>
-      <button appearance="secondary" size="m" tuiButton type="button">Send</button>
+      <button appearance="secondary" size="m" tuiButton type="button" (click)="onSubmit()" [disabled]="value.invalid">
+        Send
+      </button>
     </footer>
   </div>
 </div>

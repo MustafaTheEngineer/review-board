@@ -1,14 +1,19 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiPlatform } from '@taiga-ui/cdk';
 import { TuiAppearance, TuiButton, TuiTextfield, TuiTitle } from '@taiga-ui/core';
 import { TuiBadge, TuiInputPin } from '@taiga-ui/kit';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
+import { gql } from 'apollo-angular';
+import { ConfirmUserGQL } from '../../graphql/generated';
+import { ErrorService } from '../error-service';
+import { catchError, of } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-confirm-account',
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     TuiInputPin,
     TuiTextfield,
     TuiAppearance,
@@ -32,5 +37,46 @@ import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
   },
 })
 export class ConfirmAccount {
-  protected value = signal('');
+  errorService = inject(ErrorService);
+  router = inject(Router);
+  confirmUserGQL = inject(ConfirmUserGQL);
+  protected value = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.maxLength(6), Validators.minLength(6)],
+  });
+
+  onSubmit() {
+    this.confirmUserGQL
+      .mutate({ variables: { input: { confirmationCode: this.value.value } } })
+      .pipe(
+        catchError((error) => {
+          this.errorService.alerts
+            .open(`<strong>${error.message}</strong>`, {
+              appearance: 'negative',
+              autoClose: 5000,
+            })
+            .subscribe();
+          return of(new Error('Failed to confirm user'));
+        }),
+      )
+      .subscribe((response) => {
+        if (!(response instanceof Error)) {
+          this.router.navigate(['home']);
+        }
+      });
+  }
 }
+
+const CONFIRM_USER = gql`
+  mutation ConfirmUser($input: ConfirmUserInput!) {
+    confirmUser(input: $input) {
+      message
+      user {
+        email
+        username
+        role
+        confirmed
+      }
+    }
+  }
+`;

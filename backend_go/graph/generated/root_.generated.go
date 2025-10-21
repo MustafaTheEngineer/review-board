@@ -46,7 +46,13 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	ConfirmUserResponse struct {
+		Message func(childComplexity int) int
+		User    func(childComplexity int) int
+	}
+
 	Mutation struct {
+		ConfirmUser  func(childComplexity int, input model.ConfirmUserInput) int
 		RegisterUser func(childComplexity int, input model.NewUser) int
 		SignIn       func(childComplexity int, input model.SignInInput) int
 	}
@@ -96,6 +102,32 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "ConfirmUserResponse.message":
+		if e.complexity.ConfirmUserResponse.Message == nil {
+			break
+		}
+
+		return e.complexity.ConfirmUserResponse.Message(childComplexity), true
+
+	case "ConfirmUserResponse.user":
+		if e.complexity.ConfirmUserResponse.User == nil {
+			break
+		}
+
+		return e.complexity.ConfirmUserResponse.User(childComplexity), true
+
+	case "Mutation.confirmUser":
+		if e.complexity.Mutation.ConfirmUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_confirmUser_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ConfirmUser(childComplexity, args["input"].(model.ConfirmUserInput)), true
 
 	case "Mutation.registerUser":
 		if e.complexity.Mutation.RegisterUser == nil {
@@ -206,6 +238,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputConfirmUserInput,
 		ec.unmarshalInputNewUser,
 		ec.unmarshalInputSignInInput,
 	)
@@ -340,6 +373,7 @@ type Mutation {
     @validateEmail
     @validatePassword
   signIn(input: SignInInput!): SignInResponse! @validateEmail @validatePassword
+  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse! @validateToken
 }
 
 input NewUser {
@@ -360,6 +394,16 @@ input SignInInput {
 type SignInResponse {
   message: String!
   user: User!
-}`, BuiltIn: false},
+}
+
+input ConfirmUserInput {
+  confirmationCode: String!
+}
+
+type ConfirmUserResponse {
+  message: String!
+  user: User!
+}
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)

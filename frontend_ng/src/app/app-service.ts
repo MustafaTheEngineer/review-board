@@ -1,12 +1,20 @@
-import { afterNextRender, inject, Injectable } from '@angular/core';
+import { afterNextRender, inject, Injectable, signal } from '@angular/core';
 import { gql } from 'apollo-angular';
 import { User, ValidateTokenGQL } from '../graphql/generated';
-import { BehaviorSubject, catchError, of, shareReplay, take } from 'rxjs';
+import { catchError, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AppService {
+  error = signal<{
+    httpStatus: number;
+    message: string;
+  }>({
+    httpStatus: 200,
+    message: '',
+  })
+
   user: User = {
     blocked: false,
     confirmed: false,
@@ -23,13 +31,18 @@ export class AppService {
         })
         .pipe(
           catchError((error) => {
-            console.error('Error validating token:', error);
             return of(new Error('Failed to validate token'));
           }),
         )
         .subscribe((result) => {
           console.log(result);
           if (result instanceof Error) {
+            this.user = {
+              blocked: false,
+              confirmed: false,
+              email: '',
+              role: '',
+            };
           } else {
             if (result.data?.validateToken) {
               this.user = result.data.validateToken.user;

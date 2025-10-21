@@ -14,6 +14,7 @@ type Mutation {
     @validateEmail
     @validatePassword
   signIn(input: SignInInput!): SignInResponse! @validateEmail @validatePassword
+  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse! @validateToken
 }
 
 input NewUser {
@@ -32,6 +33,15 @@ input SignInInput {
 }
 
 type SignInResponse {
+  message: String!
+  user: User!
+}
+
+input ConfirmUserInput {
+  confirmationCode: String!
+}
+
+type ConfirmUserResponse {
   message: String!
   user: User!
 }

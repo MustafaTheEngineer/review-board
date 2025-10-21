@@ -15,17 +15,18 @@ import (
 const confirmUser = `-- name: ConfirmUser :one
 UPDATE users
 SET verification_code = NULL, verification_code_expiry = NULL, confirmed = TRUE, provider = $2
-WHERE id = $1
+WHERE id = $1 AND verification_code = $3 AND verification_code_expiry > NOW()
 RETURNING id, email, username, provider, password_hash, reset_password_token, reset_password_token_expiry, confirmation_token, confirmed, blocked, role, verification_code, verification_code_expiry, deleted, deleted_at, last_login_at, current_login_at, created_at, updated_at
 `
 
 type ConfirmUserParams struct {
-	ID       uuid.UUID `json:"id"`
-	Provider string    `json:"provider"`
+	ID               uuid.UUID      `json:"id"`
+	Provider         string         `json:"provider"`
+	VerificationCode sql.NullString `json:"verificationCode"`
 }
 
 func (q *Queries) ConfirmUser(ctx context.Context, arg ConfirmUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, confirmUser, arg.ID, arg.Provider)
+	row := q.db.QueryRowContext(ctx, confirmUser, arg.ID, arg.Provider, arg.VerificationCode)
 	var i User
 	err := row.Scan(
 		&i.ID,

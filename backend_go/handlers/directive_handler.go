@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -22,7 +21,7 @@ func defineDirectives(c *generated.Config) {
 		err = helpers.V.VarWithKey("email", email, "email")
 		if err != nil {
 			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
-			return nil, err
+			return nil, nil
 		}
 
 		return next(ctx)
@@ -33,7 +32,7 @@ func defineDirectives(c *generated.Config) {
 		err = helpers.V.VarWithKey("password", password, "min=8,max=20")
 		if err != nil {
 			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
-			return nil, err
+			return nil, nil
 		}
 
 		return next(ctx)
@@ -41,10 +40,9 @@ func defineDirectives(c *generated.Config) {
 
 	c.Directives.ValidateToken = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
 		rawCookies := graphql.GetOperationContext(ctx).Headers.Get("Cookie")
-		fmt.Println("Raw Cookies:", rawCookies) // Debug print
 		if rawCookies == "" {
 			helpers.CreateGraphQLError(ctx, "No cookies provided", http.StatusUnauthorized)
-			return nil, fmt.Errorf("no cookies provided")
+			return nil, nil
 		}
 		cookies := (&http.Request{Header: http.Header{"Cookie": []string{rawCookies}}}).Cookies()
 
@@ -66,26 +64,26 @@ func defineDirectives(c *generated.Config) {
 
 		if err != nil {
 			helpers.CreateGraphQLError(ctx, "Invalid token", http.StatusUnauthorized)
-			return nil, err
+			return nil, nil
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			userID, err := uuid.Parse(claims["sub"].(string))
 			if err != nil {
 				helpers.CreateGraphQLError(ctx, "Invalid token", http.StatusUnauthorized)
-				return nil, err
+				return nil, nil
 			}
 
 			user, err := dbConfig.DbCfg.Queries.GetUserByID(ctx, userID)
 			if err != nil {
 				helpers.CreateGraphQLError(ctx, "Error while validating token", http.StatusInternalServerError)
-				return nil, err
+				return nil, nil
 			}
 			ctx := context.WithValue(ctx, types.UserContextKey, types.UserContext{User: user})
 			return next(ctx)
 
 		} else {
 			helpers.CreateGraphQLError(ctx, "Invalid token", http.StatusUnauthorized)
-			return nil, err
+			return nil, nil
 		}
 	}
 
@@ -93,12 +91,12 @@ func defineDirectives(c *generated.Config) {
 		userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
 		if !ok {
 			helpers.CreateGraphQLError(ctx, "Username check requires authentication", http.StatusUnauthorized)
-			return nil, fmt.Errorf("unauthorized")
+			return nil, nil
 		}
 
 		if !userContext.User.Username.Valid {
 			helpers.CreateGraphQLError(ctx, "Username is not provided", http.StatusBadRequest)
-			return nil, fmt.Errorf("username is not provided")
+			return nil, nil
 		}
 
 		return next(ctx)

@@ -6,6 +6,15 @@ import (
 	"github.com/MustafaTheEngineer/review_board/internal/database"
 )
 
+type ConfirmUserInput struct {
+	ConfirmationCode string `json:"confirmationCode"`
+}
+
+type ConfirmUserResponse struct {
+	Message string         `json:"message"`
+	User    *database.User `json:"user"`
+}
+
 type Mutation struct {
 }
 

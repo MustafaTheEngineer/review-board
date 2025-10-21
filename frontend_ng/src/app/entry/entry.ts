@@ -16,6 +16,8 @@ import { TuiFieldErrorPipe, TuiSegmented, TuiSwitch, TuiTooltip } from '@taiga-u
 import { TuiCardLarge, TuiForm, TuiHeader } from '@taiga-ui/layout';
 import { error } from 'console';
 import { Router } from '@angular/router';
+import { ErrorLink } from '@apollo/client/link/error';
+import { ErrorService } from '../error-service';
 
 @Component({
   selector: 'app-entry',
@@ -44,6 +46,7 @@ import { Router } from '@angular/router';
   },
 })
 export class Entry {
+  errorService = inject(ErrorService);
   router = inject(Router);
   registerUserGQL = inject(RegisterUserGQL);
   signInGQL = inject(SignInGQL);
@@ -139,22 +142,27 @@ export class Entry {
               password: this.form.controls.password.value,
             },
           },
-        }).pipe(
+        })
+        .pipe(
           catchError((error) => {
-            console.error(error);
-            return of(new Error('Failed to register user')) 
-          })
+            this.errorService.alerts
+              .open(`<strong>${error.message}</strong>`, {
+                appearance: 'negative',
+                autoClose: 5000,
+              })
+              .subscribe();
+            return of(new Error('Failed to register user'));
+          }),
         )
         .subscribe((data) => {
-          if (data instanceof Error) {
-            
-          } else {
+          if (!(data instanceof Error)) {
             this.router.navigate(['confirm-account']);
           }
         });
     } else {
       this.signInGQL
         .mutate({
+          fetchPolicy: 'network-only',
           variables: {
             input: {
               email: this.form.controls.email.value,
@@ -162,9 +170,18 @@ export class Entry {
             },
           },
         })
-        .subscribe((data) => {
-          console.log(data.data?.signIn);
-        });
+        .pipe(
+          catchError((error) => {
+            this.errorService.alerts
+              .open(`<strong>${error.message}</strong>`, {
+                appearance: 'negative',
+                autoClose: 5000,
+              })
+              .subscribe();
+            return of(new Error('Failed to sign in'));
+          }),
+        )
+        .subscribe((data) => {});
     }
   }
 }

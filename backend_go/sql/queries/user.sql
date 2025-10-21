@@ -12,5 +12,5 @@ SELECT * FROM users WHERE email = $1;
 -- name: ConfirmUser :one
 UPDATE users
 SET verification_code = NULL, verification_code_expiry = NULL, confirmed = TRUE, provider = $2
-WHERE id = $1
+WHERE id = $1 AND verification_code = $3 AND verification_code_expiry > NOW()
 RETURNING *;

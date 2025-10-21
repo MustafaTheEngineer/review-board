@@ -20,10 +20,26 @@ export type Scalars = {
   UUID: { input: any; output: any; }
 };
 
+export type ConfirmUserInput = {
+  confirmationCode: Scalars['String']['input'];
+};
+
+export type ConfirmUserResponse = {
+  __typename?: 'ConfirmUserResponse';
+  message: Scalars['String']['output'];
+  user: User;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  confirmUser: ConfirmUserResponse;
   registerUser: RegisterUserResponse;
   signIn: SignInResponse;
+};
+
+
+export type MutationConfirmUserArgs = {
+  input: ConfirmUserInput;
 };
 
 
@@ -82,6 +98,13 @@ export type ValidateTokenQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type ValidateTokenQuery = { __typename?: 'Query', validateToken: { __typename?: 'TokenValidationResponse', user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
 
+export type ConfirmUserMutationVariables = Exact<{
+  input: ConfirmUserInput;
+}>;
+
+
+export type ConfirmUserMutation = { __typename?: 'Mutation', confirmUser: { __typename?: 'ConfirmUserResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, role: string, confirmed: boolean } } };
+
 export type RegisterUserMutationVariables = Exact<{
   input: NewUser;
 }>;
@@ -115,6 +138,30 @@ export const ValidateTokenDocument = gql`
   })
   export class ValidateTokenGQL extends Apollo.Query<ValidateTokenQuery, ValidateTokenQueryVariables> {
     document = ValidateTokenDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const ConfirmUserDocument = gql`
+    mutation ConfirmUser($input: ConfirmUserInput!) {
+  confirmUser(input: $input) {
+    message
+    user {
+      email
+      username
+      role
+      confirmed
+    }
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ConfirmUserGQL extends Apollo.Mutation<ConfirmUserMutation, ConfirmUserMutationVariables> {
+    document = ConfirmUserDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

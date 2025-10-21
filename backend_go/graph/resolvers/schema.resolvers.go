@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	graph "github.com/MustafaTheEngineer/review_board/graph/generated"
@@ -20,7 +19,7 @@ func (r *queryResolver) ValidateToken(ctx context.Context) (*model.TokenValidati
 	userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
 	if !ok {
 		helpers.CreateGraphQLError(ctx, "Username check requires authentication", http.StatusUnauthorized)
-		return nil, fmt.Errorf("unauthorized")
+		return nil, nil
 	}
 	return &model.TokenValidationResponse{
 		User: &userContext.User,

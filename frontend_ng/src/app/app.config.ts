@@ -15,6 +15,8 @@ import { provideApollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
 import { ApolloLink, InMemoryCache } from '@apollo/client';
 import { ErrorLink } from '@apollo/client/link/error';
+import { AppService } from './app-service';
+import { ErrorService } from './error-service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,19 +27,19 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch()),
     provideApollo(() => {
+      const errorService = inject(ErrorService);
       const router = inject(Router);
       const httpLink = inject(HttpLink);
       const http = httpLink.create({ uri: 'http://localhost:8080/query', withCredentials: true });
 
       const error = new ErrorLink((options) => {
-      
         if (options.result?.errors) {
+          console.log(options.result.errors);
           for (const error of options.result.errors) {
-              console.log('Error occurred:', error.path);
-            if (error.extensions) {
-              if (error.extensions['code'] === 401) {
+            if (error.path) {
+              if (error.path[0] === 'validateToken') {
                 router.navigate(['entry']);
-                break;
+                return;
               }
             }
           }
