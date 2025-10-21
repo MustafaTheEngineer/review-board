@@ -7,14 +7,6 @@ import { catchError, of } from 'rxjs';
   providedIn: 'root',
 })
 export class AppService {
-  error = signal<{
-    httpStatus: number;
-    message: string;
-  }>({
-    httpStatus: 200,
-    message: '',
-  })
-
   user: User = {
     blocked: false,
     confirmed: false,

@@ -114,6 +114,37 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	return i, err
 }
 
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT id, email, username, provider, password_hash, reset_password_token, reset_password_token_expiry, confirmation_token, confirmed, blocked, role, verification_code, verification_code_expiry, deleted, deleted_at, last_login_at, current_login_at, created_at, updated_at FROM users WHERE username = $1
+`
+
+func (q *Queries) GetUserByUsername(ctx context.Context, username sql.NullString) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Provider,
+		&i.PasswordHash,
+		&i.ResetPasswordToken,
+		&i.ResetPasswordTokenExpiry,
+		&i.ConfirmationToken,
+		&i.Confirmed,
+		&i.Blocked,
+		&i.Role,
+		&i.VerificationCode,
+		&i.VerificationCodeExpiry,
+		&i.Deleted,
+		&i.DeletedAt,
+		&i.LastLoginAt,
+		&i.CurrentLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const registerUser = `-- name: RegisterUser :one
 INSERT INTO users (id, email, password_hash, verification_code, verification_code_expiry, provider)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -138,6 +169,45 @@ func (q *Queries) RegisterUser(ctx context.Context, arg RegisterUserParams) (Use
 		arg.VerificationCodeExpiry,
 		arg.Provider,
 	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Provider,
+		&i.PasswordHash,
+		&i.ResetPasswordToken,
+		&i.ResetPasswordTokenExpiry,
+		&i.ConfirmationToken,
+		&i.Confirmed,
+		&i.Blocked,
+		&i.Role,
+		&i.VerificationCode,
+		&i.VerificationCodeExpiry,
+		&i.Deleted,
+		&i.DeletedAt,
+		&i.LastLoginAt,
+		&i.CurrentLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const setUserUsername = `-- name: SetUserUsername :one
+UPDATE users
+SET username = $2
+WHERE id = $1
+RETURNING id, email, username, provider, password_hash, reset_password_token, reset_password_token_expiry, confirmation_token, confirmed, blocked, role, verification_code, verification_code_expiry, deleted, deleted_at, last_login_at, current_login_at, created_at, updated_at
+`
+
+type SetUserUsernameParams struct {
+	ID       uuid.UUID      `json:"id"`
+	Username sql.NullString `json:"username"`
+}
+
+func (q *Queries) SetUserUsername(ctx context.Context, arg SetUserUsernameParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, setUserUsername, arg.ID, arg.Username)
 	var i User
 	err := row.Scan(
 		&i.ID,

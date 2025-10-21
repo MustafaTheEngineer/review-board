@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/99designs/gqlgen/graphql"
 	apiConfig "github.com/MustafaTheEngineer/review_board/config/api"
@@ -79,6 +81,7 @@ func defineDirectives(c *generated.Config) {
 				return nil, nil
 			}
 			ctx := context.WithValue(ctx, types.UserContextKey, types.UserContext{User: user})
+			fmt.Println(user.Confirmed)
 			return next(ctx)
 
 		} else {
@@ -87,8 +90,25 @@ func defineDirectives(c *generated.Config) {
 		}
 	}
 
+	c.Directives.CheckIfConfirmed = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
+		userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+		fmt.Println("reached if confirmed")
+		if !ok {
+			helpers.CreateGraphQLError(ctx, "Confirmation check requires authentication", http.StatusUnauthorized)
+			return nil, nil
+		}
+		if !userContext.User.Confirmed {
+			
+			helpers.CreateGraphQLError(ctx, "User is not confirmed", http.StatusUnauthorized)
+			return nil, nil
+		}
+
+		return next(ctx)
+	}
+
 	c.Directives.CheckUsername = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
 		userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+		fmt.Println("reached username")
 		if !ok {
 			helpers.CreateGraphQLError(ctx, "Username check requires authentication", http.StatusUnauthorized)
 			return nil, nil
@@ -99,6 +119,22 @@ func defineDirectives(c *generated.Config) {
 			return nil, nil
 		}
 
+		return next(ctx)
+	}
+
+	c.Directives.ValidateUsername = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
+		username := graphql.GetOperationContext(ctx).Variables["input"].(string)
+		fmt.Println("reached val username")
+		_, err = regexp.Compile("^[a-zA-Z0-9][a-zA-Z0-9._-]*$")
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, "Invalid username format", http.StatusBadRequest)
+			return nil, nil
+		}
+		err = helpers.V.VarWithKey("username", username, "min=3,max=20")
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
+			return nil, nil
+		}
 		return next(ctx)
 	}
 }

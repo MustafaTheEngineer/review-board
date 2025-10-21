@@ -31,6 +31,11 @@ type RegisterUserResponse struct {
 	User    *database.User `json:"user"`
 }
 
+type SetUsernameResponse struct {
+	Message string         `json:"message"`
+	User    *database.User `json:"user"`
+}
+
 type SignInInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`

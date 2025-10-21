@@ -13,6 +13,50 @@ import (
 	"github.com/google/uuid"
 )
 
+type ItemStatus string
+
+const (
+	ItemStatusNew      ItemStatus = "new"
+	ItemStatusInReview ItemStatus = "in_review"
+	ItemStatusApproved ItemStatus = "approved"
+	ItemStatusRejected ItemStatus = "rejected"
+)
+
+func (e *ItemStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ItemStatus(s)
+	case string:
+		*e = ItemStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ItemStatus: %T", src)
+	}
+	return nil
+}
+
+type NullItemStatus struct {
+	ItemStatus ItemStatus `json:"itemStatus"`
+	Valid      bool       `json:"valid"` // Valid is true if ItemStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullItemStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ItemStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ItemStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullItemStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ItemStatus), nil
+}
+
 type Role string
 
 const (
@@ -53,6 +97,32 @@ func (ns NullRole) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.Role), nil
+}
+
+type Item struct {
+	ID              uuid.UUID      `json:"id"`
+	CreatorID       uuid.UUID      `json:"creatorId"`
+	Title           string         `json:"title"`
+	Description     sql.NullString `json:"description"`
+	Amount          string         `json:"amount"`
+	Status          ItemStatus     `json:"status"`
+	DeletedByUserID uuid.NullUUID  `json:"deletedByUserId"`
+	DeletedAt       sql.NullTime   `json:"deletedAt"`
+	CreatedAt       time.Time      `json:"createdAt"`
+	UpdatedAt       time.Time      `json:"updatedAt"`
+}
+
+type ItemTag struct {
+	ItemID uuid.UUID `json:"itemId"`
+	TagID  uuid.UUID `json:"tagId"`
+}
+
+type Tag struct {
+	ID              uuid.UUID     `json:"id"`
+	CreatedByUserID uuid.NullUUID `json:"createdByUserId"`
+	Name            string        `json:"name"`
+	CreatedAt       time.Time     `json:"createdAt"`
+	UpdatedAt       time.Time     `json:"updatedAt"`
 }
 
 type User struct {

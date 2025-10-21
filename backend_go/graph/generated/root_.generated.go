@@ -39,10 +39,12 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	CheckIfConfirmed func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	CheckUsername    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	ValidateEmail    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	ValidatePassword func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	ValidateToken    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidateUsername func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 }
 
 type ComplexityRoot struct {
@@ -54,14 +56,21 @@ type ComplexityRoot struct {
 	Mutation struct {
 		ConfirmUser  func(childComplexity int, input model.ConfirmUserInput) int
 		RegisterUser func(childComplexity int, input model.NewUser) int
+		SetUsername  func(childComplexity int, username string) int
 		SignIn       func(childComplexity int, input model.SignInInput) int
 	}
 
 	Query struct {
-		ValidateToken func(childComplexity int) int
+		IsUsernameTaken func(childComplexity int, username string) int
+		ValidateToken   func(childComplexity int) int
 	}
 
 	RegisterUserResponse struct {
+		Message func(childComplexity int) int
+		User    func(childComplexity int) int
+	}
+
+	SetUsernameResponse struct {
 		Message func(childComplexity int) int
 		User    func(childComplexity int) int
 	}
@@ -141,6 +150,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.RegisterUser(childComplexity, args["input"].(model.NewUser)), true
 
+	case "Mutation.setUsername":
+		if e.complexity.Mutation.SetUsername == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setUsername_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetUsername(childComplexity, args["username"].(string)), true
+
 	case "Mutation.signIn":
 		if e.complexity.Mutation.SignIn == nil {
 			break
@@ -152,6 +173,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SignIn(childComplexity, args["input"].(model.SignInInput)), true
+
+	case "Query.isUsernameTaken":
+		if e.complexity.Query.IsUsernameTaken == nil {
+			break
+		}
+
+		args, err := ec.field_Query_isUsernameTaken_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.IsUsernameTaken(childComplexity, args["username"].(string)), true
 
 	case "Query.validateToken":
 		if e.complexity.Query.ValidateToken == nil {
@@ -173,6 +206,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.RegisterUserResponse.User(childComplexity), true
+
+	case "SetUsernameResponse.message":
+		if e.complexity.SetUsernameResponse.Message == nil {
+			break
+		}
+
+		return e.complexity.SetUsernameResponse.Message(childComplexity), true
+
+	case "SetUsernameResponse.user":
+		if e.complexity.SetUsernameResponse.User == nil {
+			break
+		}
+
+		return e.complexity.SetUsernameResponse.User(childComplexity), true
 
 	case "SignInResponse.message":
 		if e.complexity.SignInResponse.Message == nil {
@@ -347,7 +394,6 @@ scalar UUID
 scalar Int64
 
 directive @validateToken on FIELD_DEFINITION
-directive @checkUsername on FIELD_DEFINITION
 
 type Query {
   validateToken: TokenValidationResponse! @validateToken
@@ -367,13 +413,25 @@ type TokenValidationResponse {
 
 directive @validateEmail on FIELD_DEFINITION
 directive @validatePassword on FIELD_DEFINITION
+directive @checkUsername on FIELD_DEFINITION
+directive @checkIfConfirmed on FIELD_DEFINITION
+directive @validateUsername on FIELD_DEFINITION
+
+extend type Query {
+  isUsernameTaken(username: String!): Boolean! @checkIfConfirmed @validateToken
+}
 
 type Mutation {
   registerUser(input: NewUser!): RegisterUserResponse!
     @validateEmail
     @validatePassword
   signIn(input: SignInInput!): SignInResponse! @validateEmail @validatePassword
-  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse! @validateToken
+  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse!
+    @validateToken
+  setUsername(username: String!): SetUsernameResponse!
+    @validateUsername
+    @checkIfConfirmed
+    @validateToken
 }
 
 input NewUser {
@@ -401,6 +459,11 @@ input ConfirmUserInput {
 }
 
 type ConfirmUserResponse {
+  message: String!
+  user: User!
+}
+
+type SetUsernameResponse {
   message: String!
   user: User!
 }

@@ -21,6 +21,7 @@ type MutationResolver interface {
 	RegisterUser(ctx context.Context, input model.NewUser) (*model.RegisterUserResponse, error)
 	SignIn(ctx context.Context, input model.SignInInput) (*model.SignInResponse, error)
 	ConfirmUser(ctx context.Context, input model.ConfirmUserInput) (*model.ConfirmUserResponse, error)
+	SetUsername(ctx context.Context, username string) (*model.SetUsernameResponse, error)
 }
 type UserResolver interface {
 	Username(ctx context.Context, obj *database.User) (*string, error)
@@ -51,6 +52,17 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setUsername_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "username", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["username"] = arg0
 	return args, nil
 }
 
@@ -337,6 +349,80 @@ func (ec *executionContext) fieldContext_Mutation_confirmUser(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_setUsername(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setUsername,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetUsername(ctx, fc.Args["username"].(string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.ValidateUsername == nil {
+					var zeroVal *model.SetUsernameResponse
+					return zeroVal, errors.New("directive validateUsername is not implemented")
+				}
+				return ec.directives.ValidateUsername(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.directives.CheckIfConfirmed == nil {
+					var zeroVal *model.SetUsernameResponse
+					return zeroVal, errors.New("directive checkIfConfirmed is not implemented")
+				}
+				return ec.directives.CheckIfConfirmed(ctx, nil, directive1)
+			}
+			directive3 := func(ctx context.Context) (any, error) {
+				if ec.directives.ValidateToken == nil {
+					var zeroVal *model.SetUsernameResponse
+					return zeroVal, errors.New("directive validateToken is not implemented")
+				}
+				return ec.directives.ValidateToken(ctx, nil, directive2)
+			}
+
+			next = directive3
+			return next
+		},
+		ec.marshalNSetUsernameResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐSetUsernameResponse,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setUsername(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "message":
+				return ec.fieldContext_SetUsernameResponse_message(ctx, field)
+			case "user":
+				return ec.fieldContext_SetUsernameResponse_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SetUsernameResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setUsername_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _RegisterUserResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.RegisterUserResponse) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -385,6 +471,76 @@ func (ec *executionContext) _RegisterUserResponse_user(ctx context.Context, fiel
 func (ec *executionContext) fieldContext_RegisterUserResponse_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RegisterUserResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "username":
+				return ec.fieldContext_User_username(ctx, field)
+			case "confirmed":
+				return ec.fieldContext_User_confirmed(ctx, field)
+			case "blocked":
+				return ec.fieldContext_User_blocked(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SetUsernameResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.SetUsernameResponse) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SetUsernameResponse_message,
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SetUsernameResponse_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SetUsernameResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SetUsernameResponse_user(ctx context.Context, field graphql.CollectedField, obj *model.SetUsernameResponse) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SetUsernameResponse_user,
+		func(ctx context.Context) (any, error) {
+			return obj.User, nil
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SetUsernameResponse_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SetUsernameResponse",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -813,6 +969,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "setUsername":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setUsername(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -854,6 +1017,50 @@ func (ec *executionContext) _RegisterUserResponse(ctx context.Context, sel ast.S
 			}
 		case "user":
 			out.Values[i] = ec._RegisterUserResponse_user(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var setUsernameResponseImplementors = []string{"SetUsernameResponse"}
+
+func (ec *executionContext) _SetUsernameResponse(ctx context.Context, sel ast.SelectionSet, obj *model.SetUsernameResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, setUsernameResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SetUsernameResponse")
+		case "message":
+			out.Values[i] = ec._SetUsernameResponse_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "user":
+			out.Values[i] = ec._SetUsernameResponse_user(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -1082,6 +1289,20 @@ func (ec *executionContext) marshalNRegisterUserResponse2ᚖgithubᚗcomᚋMusta
 		return graphql.Null
 	}
 	return ec._RegisterUserResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSetUsernameResponse2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐSetUsernameResponse(ctx context.Context, sel ast.SelectionSet, v model.SetUsernameResponse) graphql.Marshaler {
+	return ec._SetUsernameResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSetUsernameResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐSetUsernameResponse(ctx context.Context, sel ast.SelectionSet, v *model.SetUsernameResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SetUsernameResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNSignInInput2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐSignInInput(ctx context.Context, v any) (model.SignInInput, error) {

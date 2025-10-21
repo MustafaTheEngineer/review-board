@@ -36,11 +36,22 @@ export const appConfig: ApplicationConfig = {
         if (options.result?.errors) {
           console.log(options.result.errors);
           for (const error of options.result.errors) {
+            console.log(error.message);
             if (error.path) {
               if (error.path[0] === 'validateToken') {
                 router.navigate(['entry']);
                 return;
               }
+            }
+            if (error.message === 'User is not confirmed') {
+              router.navigate(['confirm-account']);
+              errorService.alerts
+                .open('<strong>Please confirm your account first.</strong>', {
+                  appearance: 'negative',
+                  autoClose: 5000,
+                })
+                .subscribe();
+              return;
             }
           }
         }

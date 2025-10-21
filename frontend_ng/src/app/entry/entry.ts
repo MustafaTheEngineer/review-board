@@ -181,7 +181,11 @@ export class Entry {
             return of(new Error('Failed to sign in'));
           }),
         )
-        .subscribe((data) => {});
+        .subscribe((data) => {
+          if (!(data instanceof Error)) {
+            this.router.navigate(['confirm-account']);
+          }
+        });
     }
   }
 }

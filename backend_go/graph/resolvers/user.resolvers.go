@@ -187,6 +187,57 @@ func (r *mutationResolver) ConfirmUser(ctx context.Context, input model.ConfirmU
 	}, nil
 }
 
+// SetUsername is the resolver for the setUsername field.
+func (r *mutationResolver) SetUsername(ctx context.Context, username string) (*model.SetUsernameResponse, error) {
+	userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+	if !ok {
+		helpers.CreateGraphQLError(ctx, "Username check requires authentication", http.StatusUnauthorized)
+		return nil, nil
+	}
+
+	dbUser, err := dbConfig.DbCfg.Queries.SetUserUsername(ctx, database.SetUserUsernameParams{
+		ID: userContext.User.ID,
+		Username: sql.NullString{
+			String: username,
+			Valid:  true,
+		},
+	})
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while setting username", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	return &model.SetUsernameResponse{
+		Message: "Username set successfully",
+		User:    &dbUser,
+	}, nil
+}
+
+// IsUsernameTaken is the resolver for the isUsernameTaken field.
+func (r *queryResolver) IsUsernameTaken(ctx context.Context, username string) (bool, error) {
+	userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+	if !ok {
+		helpers.CreateGraphQLError(ctx, "Username check requires authentication", http.StatusUnauthorized)
+		return true, nil
+	}
+	dbUser, err := dbConfig.DbCfg.Queries.GetUserByUsername(ctx, userContext.User.Username)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			helpers.CreateGraphQLError(ctx, "Error while checking if username already exists", http.StatusInternalServerError)
+			return true, nil
+		} else {
+			return false, nil
+		}
+	}
+
+	if dbUser.Username.String == userContext.User.Username.String {
+		helpers.CreateGraphQLError(ctx, "This username belongs to you", http.StatusBadRequest)
+		return true, nil
+	}
+
+	return true, nil
+}
+
 // Username is the resolver for the username field.
 func (r *userResolver) Username(ctx context.Context, obj *database.User) (*string, error) {
 	if obj.Username.Valid {

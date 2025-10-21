@@ -34,6 +34,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   confirmUser: ConfirmUserResponse;
   registerUser: RegisterUserResponse;
+  setUsername: SetUsernameResponse;
   signIn: SignInResponse;
 };
 
@@ -48,6 +49,11 @@ export type MutationRegisterUserArgs = {
 };
 
 
+export type MutationSetUsernameArgs = {
+  username: Scalars['String']['input'];
+};
+
+
 export type MutationSignInArgs = {
   input: SignInInput;
 };
@@ -59,11 +65,23 @@ export type NewUser = {
 
 export type Query = {
   __typename?: 'Query';
+  isUsernameTaken: Scalars['Boolean']['output'];
   validateToken: TokenValidationResponse;
+};
+
+
+export type QueryIsUsernameTakenArgs = {
+  username: Scalars['String']['input'];
 };
 
 export type RegisterUserResponse = {
   __typename?: 'RegisterUserResponse';
+  message: Scalars['String']['output'];
+  user: User;
+};
+
+export type SetUsernameResponse = {
+  __typename?: 'SetUsernameResponse';
   message: Scalars['String']['output'];
   user: User;
 };
@@ -97,6 +115,20 @@ export type ValidateTokenQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ValidateTokenQuery = { __typename?: 'Query', validateToken: { __typename?: 'TokenValidationResponse', user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+
+export type IsUsernameTakenQueryVariables = Exact<{
+  input: Scalars['String']['input'];
+}>;
+
+
+export type IsUsernameTakenQuery = { __typename?: 'Query', isUsernameTaken: boolean };
+
+export type SetUsernameMutationVariables = Exact<{
+  input: Scalars['String']['input'];
+}>;
+
+
+export type SetUsernameMutation = { __typename?: 'Mutation', setUsername: { __typename?: 'SetUsernameResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean } } };
 
 export type ConfirmUserMutationVariables = Exact<{
   input: ConfirmUserInput;
@@ -138,6 +170,46 @@ export const ValidateTokenDocument = gql`
   })
   export class ValidateTokenGQL extends Apollo.Query<ValidateTokenQuery, ValidateTokenQueryVariables> {
     document = ValidateTokenDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const IsUsernameTakenDocument = gql`
+    query IsUsernameTaken($input: String!) {
+  isUsernameTaken(username: $input)
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class IsUsernameTakenGQL extends Apollo.Query<IsUsernameTakenQuery, IsUsernameTakenQueryVariables> {
+    document = IsUsernameTakenDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const SetUsernameDocument = gql`
+    mutation SetUsername($input: String!) {
+  setUsername(username: $input) {
+    message
+    user {
+      email
+      username
+      confirmed
+      blocked
+    }
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class SetUsernameGQL extends Apollo.Mutation<SetUsernameMutation, SetUsernameMutationVariables> {
+    document = SetUsernameDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

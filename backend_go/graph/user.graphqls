@@ -8,13 +8,25 @@ type User {
 
 directive @validateEmail on FIELD_DEFINITION
 directive @validatePassword on FIELD_DEFINITION
+directive @checkUsername on FIELD_DEFINITION
+directive @checkIfConfirmed on FIELD_DEFINITION
+directive @validateUsername on FIELD_DEFINITION
+
+extend type Query {
+  isUsernameTaken(username: String!): Boolean! @checkIfConfirmed @validateToken
+}
 
 type Mutation {
   registerUser(input: NewUser!): RegisterUserResponse!
     @validateEmail
     @validatePassword
   signIn(input: SignInInput!): SignInResponse! @validateEmail @validatePassword
-  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse! @validateToken
+  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse!
+    @validateToken
+  setUsername(username: String!): SetUsernameResponse!
+    @validateUsername
+    @checkIfConfirmed
+    @validateToken
 }
 
 input NewUser {
@@ -42,6 +54,11 @@ input ConfirmUserInput {
 }
 
 type ConfirmUserResponse {
+  message: String!
+  user: User!
+}
+
+type SetUsernameResponse {
   message: String!
   user: User!
 }

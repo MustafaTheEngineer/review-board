@@ -7,7 +7,6 @@ scalar UUID
 scalar Int64
 
 directive @validateToken on FIELD_DEFINITION
-directive @checkUsername on FIELD_DEFINITION
 
 type Query {
   validateToken: TokenValidationResponse! @validateToken
