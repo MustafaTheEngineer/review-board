@@ -1,0 +1,36 @@
+<form tuiForm="l" [formGroup]="itemForm" [style.max-width.rem]="35">
+  <header tuiHeader>
+    <h3 tuiTitle>New Item</h3>
+  </header>
+
+  <tui-textfield>
+    <label tuiLabel>Title</label>
+    <input tuiTextfield formControlName="title" />
+  </tui-textfield>
+  <tui-error [error]="titleError()" />
+
+  <tui-textfield>
+    <label tuiLabel>Description</label>
+    <textarea tuiTextarea formControlName="description"></textarea>
+  </tui-textfield>
+
+  <tui-textfield>
+    <label tuiLabel>Enter a number</label>
+
+    <input tuiInputNumber formControlName="amount" [prefix]="'USD' | tuiCurrency" />
+  </tui-textfield>
+
+  <tui-textfield multi>
+    <input placeholder="Tags" tuiInputChip formControlName="tags" />
+    <tui-input-chip *tuiItem />
+    @if (items | tuiHideSelected | tuiFilterByInput; as items) {
+      <ng-container>
+        @if (items.length) {
+          <ng-template tuiTextfieldDropdown>
+            <tui-data-list-wrapper [items]="items" />
+          </ng-template>
+        }
+      </ng-container>
+    }
+  </tui-textfield>
+</form>

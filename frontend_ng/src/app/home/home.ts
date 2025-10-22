@@ -31,9 +31,6 @@ import { tuiAsPortal, TuiPortals, TuiRepeatTimes } from '@taiga-ui/cdk';
   selector: 'app-home',
   imports: [
     FormsModule,
-    KeyValuePipe,
-    NgForOf,
-    NgIf,
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
@@ -43,22 +40,16 @@ import { tuiAsPortal, TuiPortals, TuiRepeatTimes } from '@taiga-ui/cdk';
     TuiBadgeNotification,
     TuiBreadcrumbs,
     TuiButton,
-    TuiCardLarge,
     TuiChevron,
     TuiDataList,
     TuiDataListDropdownManager,
     TuiDropdown,
     TuiFade,
-    TuiForm,
-    TuiHeader,
     TuiIcon,
     TuiLink,
     TuiNavigation,
-    TuiRepeatTimes,
-    TuiSwitch,
     TuiTabs,
     TuiTextfield,
-    TuiTitle,
   ],
   templateUrl: './home.html',
   styleUrl: './home.less',
@@ -66,8 +57,6 @@ import { tuiAsPortal, TuiPortals, TuiRepeatTimes } from '@taiga-ui/cdk';
 })
 export class Home {
   protected expanded = signal(false);
-  protected open = false;
-  protected switch = false;
   protected readonly routes: any = {};
   protected readonly breadcrumbs = ['Home'];
 

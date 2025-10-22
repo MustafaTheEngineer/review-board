@@ -24,13 +24,11 @@
   >
     <span [style.overflow]="'hidden'" [style.text-overflow]="'ellipsis'"> Create </span>
     <ng-template #createList>
-        <tui-data-list size="s">
-          <button tuiOption new type="button">
-            Item
-          </button>
-          <button tuiOption new type="button">Something else</button>
-        </tui-data-list>
-      </ng-template>
+      <tui-data-list size="s">
+        <button tuiOption new type="button">Item</button>
+        <button tuiOption new type="button">Something else</button>
+      </tui-data-list>
+    </ng-template>
   </button>
   <button iconStart="@tui.bell" tuiIconButton type="button">
     Notifications
