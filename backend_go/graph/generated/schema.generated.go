@@ -699,6 +699,22 @@ func (ec *executionContext) _TokenValidationResponse(ctx context.Context, sel as
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNDate2string(ctx context.Context, v any) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDate2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNTokenValidationResponse2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐTokenValidationResponse(ctx context.Context, sel ast.SelectionSet, v model.TokenValidationResponse) graphql.Marshaler {
 	return ec._TokenValidationResponse(ctx, sel, &v)
 }

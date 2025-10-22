@@ -33,6 +33,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Item() ItemResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Tag() TagResolver
@@ -40,12 +41,15 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	CheckIfConfirmed func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
-	CheckUsername    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
-	ValidateEmail    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
-	ValidatePassword func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
-	ValidateToken    func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
-	ValidateUsername func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	CheckIfConfirmed   func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	CheckUsername      func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidateEmail      func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidateItemAmount func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidateItemTags   func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidateItemTitle  func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidatePassword   func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidateToken      func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	ValidateUsername   func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 }
 
 type ComplexityRoot struct {
@@ -54,8 +58,24 @@ type ComplexityRoot struct {
 		User    func(childComplexity int) int
 	}
 
+	CreateItemResponse struct {
+		Item func(childComplexity int) int
+		Tags func(childComplexity int) int
+	}
+
+	Item struct {
+		Amount      func(childComplexity int) int
+		CreatedAt   func(childComplexity int) int
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Status      func(childComplexity int) int
+		Title       func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
+	}
+
 	Mutation struct {
 		ConfirmUser  func(childComplexity int, input model.ConfirmUserInput) int
+		CreateItem   func(childComplexity int, input model.CreateItemRequest) int
 		RegisterUser func(childComplexity int, input model.NewUser) int
 		SetUsername  func(childComplexity int, username string) int
 		SignIn       func(childComplexity int, input model.SignInInput) int
@@ -135,6 +155,69 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ConfirmUserResponse.User(childComplexity), true
 
+	case "CreateItemResponse.item":
+		if e.complexity.CreateItemResponse.Item == nil {
+			break
+		}
+
+		return e.complexity.CreateItemResponse.Item(childComplexity), true
+
+	case "CreateItemResponse.tags":
+		if e.complexity.CreateItemResponse.Tags == nil {
+			break
+		}
+
+		return e.complexity.CreateItemResponse.Tags(childComplexity), true
+
+	case "Item.amount":
+		if e.complexity.Item.Amount == nil {
+			break
+		}
+
+		return e.complexity.Item.Amount(childComplexity), true
+
+	case "Item.createdAt":
+		if e.complexity.Item.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Item.CreatedAt(childComplexity), true
+
+	case "Item.description":
+		if e.complexity.Item.Description == nil {
+			break
+		}
+
+		return e.complexity.Item.Description(childComplexity), true
+
+	case "Item.id":
+		if e.complexity.Item.ID == nil {
+			break
+		}
+
+		return e.complexity.Item.ID(childComplexity), true
+
+	case "Item.status":
+		if e.complexity.Item.Status == nil {
+			break
+		}
+
+		return e.complexity.Item.Status(childComplexity), true
+
+	case "Item.title":
+		if e.complexity.Item.Title == nil {
+			break
+		}
+
+		return e.complexity.Item.Title(childComplexity), true
+
+	case "Item.updatedAt":
+		if e.complexity.Item.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Item.UpdatedAt(childComplexity), true
+
 	case "Mutation.confirmUser":
 		if e.complexity.Mutation.ConfirmUser == nil {
 			break
@@ -146,6 +229,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.ConfirmUser(childComplexity, args["input"].(model.ConfirmUserInput)), true
+
+	case "Mutation.createItem":
+		if e.complexity.Mutation.CreateItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createItem_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateItem(childComplexity, args["input"].(model.CreateItemRequest)), true
 
 	case "Mutation.registerUser":
 		if e.complexity.Mutation.RegisterUser == nil {
@@ -335,6 +430,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputConfirmUserInput,
+		ec.unmarshalInputCreateItemRequest,
 		ec.unmarshalInputNewUser,
 		ec.unmarshalInputSignInInput,
 		ec.unmarshalInputTagsInput,
@@ -435,10 +531,54 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "../item.graphqls", Input: `directive @validateItemTitle on FIELD_DEFINITION
+directive @validateItemAmount on FIELD_DEFINITION
+directive @validateItemTags on FIELD_DEFINITION
+
+enum ItemStatus {
+  NEW
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+type Item {
+  id: ID!
+  title: String!
+  description: String
+  amount: String!
+  status: ItemStatus!
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+extend type Mutation {
+  createItem(input: CreateItemRequest!): CreateItemResponse
+    @validateItemTags
+    @validateItemAmount
+    @validateItemTitle
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
+}
+
+input CreateItemRequest {
+  title: String!
+  description: String
+  amount: Float!
+  tags: [String!]!
+}
+
+type CreateItemResponse {
+  item: Item!
+  tags: [String!]!
+}
+`, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
 
+scalar Date
 scalar Any
 scalar UUID
 

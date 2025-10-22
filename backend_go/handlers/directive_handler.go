@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"regexp"
 	"strings"
@@ -19,7 +20,12 @@ import (
 
 func defineDirectives(c *generated.Config) {
 	c.Directives.ValidateEmail = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
-		email := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["email"].(string)
+		email, ok := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["email"].(string)
+		if !ok {
+			helpers.CreateGraphQLError(ctx, "Missing email in input", http.StatusBadRequest)
+			return nil, nil
+		}
+
 		err = helpers.V.VarWithKey("email", email, "email")
 		if err != nil {
 			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
@@ -30,7 +36,12 @@ func defineDirectives(c *generated.Config) {
 	}
 
 	c.Directives.ValidatePassword = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
-		password := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["password"].(string)
+		password, ok := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["password"].(string)
+		if!ok {
+            helpers.CreateGraphQLError(ctx, "Missing password in input", http.StatusBadRequest)
+            return nil, nil
+        }
+		
 		err = helpers.V.VarWithKey("password", password, "min=8,max=20")
 		if err != nil {
 			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
@@ -139,6 +150,72 @@ func defineDirectives(c *generated.Config) {
 			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
 			return nil, nil
 		}
+		return next(ctx)
+	}
+
+	c.Directives.ValidateItemTitle = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
+		title, ok := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["title"].(string)
+		if !ok {
+			helpers.CreateGraphQLError(ctx, "Title is not provided", http.StatusBadRequest)
+			return nil, nil
+		}
+		err = helpers.V.VarWithKey("title", title, "min=3,max=255")
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
+			return nil, nil
+		}
+
+		return next(ctx)
+	}
+
+	c.Directives.ValidateItemAmount = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
+		amount, err := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["amount"].(json.Number).Float64()
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, "Invalid amount", http.StatusBadRequest)
+			return nil, nil
+		}
+
+		err = helpers.V.VarWithKey("amount", amount, "min=0,max=99999999.99")
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
+			return nil, nil
+		}
+
+		return next(ctx)
+	}
+
+	validTag := regexp.MustCompile("^[a-zA-Z0-9][a-zA-Z0-9._-]*$")
+
+	c.Directives.ValidateItemTags = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
+		tags, ok := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["tags"].([]any)
+		if !ok {
+			helpers.CreateGraphQLError(ctx, "Tags are not provided", http.StatusBadRequest)
+			return nil, nil
+		}
+
+		err = helpers.V.VarWithKey("tags", tags, "min=3")
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
+			return nil, nil
+		}
+
+		for _, tag := range tags {
+			tag, ok := tag.(string)
+			if !ok {
+				helpers.CreateGraphQLError(ctx, "Invalid tag format", http.StatusBadRequest)
+				return nil, nil
+			}
+
+			if !validTag.MatchString(tag) {
+				helpers.CreateGraphQLError(ctx, "Invalid tag format", http.StatusBadRequest)
+				return nil, nil
+			}
+			if len(tag) < 3 {
+				helpers.CreateGraphQLError(ctx, "Invalid tag format", http.StatusBadRequest)
+				return nil, nil
+			}
+		}
+
 		return next(ctx)
 	}
 }

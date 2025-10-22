@@ -2,6 +2,7 @@
 #
 # https://gqlgen.com/getting-started/
 
+scalar Date
 scalar Any
 scalar UUID
 

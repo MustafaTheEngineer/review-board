@@ -16,6 +16,7 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   Any: { input: any; output: any; }
+  Date: { input: any; output: any; }
   UUID: { input: any; output: any; }
 };
 
@@ -29,9 +30,35 @@ export type ConfirmUserResponse = {
   user: User;
 };
 
+export type CreateItemRequest = {
+  amount: Scalars['Float']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  tags: Array<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type Item = {
+  __typename?: 'Item';
+  amount: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  status: ItemStatus;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['Date']['output'];
+};
+
+export enum ItemStatus {
+  Approved = 'APPROVED',
+  InReview = 'IN_REVIEW',
+  New = 'NEW',
+  Rejected = 'REJECTED'
+}
+
 export type Mutation = {
   __typename?: 'Mutation';
   confirmUser: ConfirmUserResponse;
+  createItem?: Maybe<Item>;
   registerUser: RegisterUserResponse;
   setUsername: SetUsernameResponse;
   signIn: SignInResponse;
@@ -40,6 +67,11 @@ export type Mutation = {
 
 export type MutationConfirmUserArgs = {
   input: ConfirmUserInput;
+};
+
+
+export type MutationCreateItemArgs = {
+  input?: InputMaybe<CreateItemRequest>;
 };
 
 

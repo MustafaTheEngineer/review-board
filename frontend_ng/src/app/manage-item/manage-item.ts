@@ -133,7 +133,7 @@ export class ManageItem {
     description: new FormControl(''),
     amount: new FormControl(0, {
       nonNullable: true,
-      validators: [Validators.required, Validators.min(0)],
+      validators: [Validators.required, Validators.min(0), Validators.max(99_999_999.99)],
     }),
     tags: new FormControl<string[]>([], {
       nonNullable: true,
@@ -176,6 +176,9 @@ export class ManageItem {
 
         if (amount < 0) {
           return of('Amount should be greater than or equal to 0');
+        }
+        if (amount > 99_999_999.99) {
+          return of('Amount should be less than or equal to 99999999.99');
         }
 
         return of(null);

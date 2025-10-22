@@ -1,0 +1,42 @@
+directive @validateItemTitle on FIELD_DEFINITION
+directive @validateItemAmount on FIELD_DEFINITION
+directive @validateItemTags on FIELD_DEFINITION
+
+enum ItemStatus {
+  NEW
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+type Item {
+  id: ID!
+  title: String!
+  description: String
+  amount: String!
+  status: ItemStatus!
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+extend type Mutation {
+  createItem(input: CreateItemRequest!): CreateItemResponse
+    @validateItemTags
+    @validateItemAmount
+    @validateItemTitle
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
+}
+
+input CreateItemRequest {
+  title: String!
+  description: String
+  amount: Float!
+  tags: [String!]!
+}
+
+type CreateItemResponse {
+  item: Item!
+  tags: [String!]!
+}

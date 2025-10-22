@@ -15,6 +15,18 @@ type ConfirmUserResponse struct {
 	User    *database.User `json:"user"`
 }
 
+type CreateItemRequest struct {
+	Title       string   `json:"title"`
+	Description *string  `json:"description,omitempty"`
+	Amount      float64  `json:"amount"`
+	Tags        []string `json:"tags"`
+}
+
+type CreateItemResponse struct {
+	Item *database.Item `json:"item"`
+	Tags []string       `json:"tags"`
+}
+
 type Mutation struct {
 }
 
