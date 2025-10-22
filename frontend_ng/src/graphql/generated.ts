@@ -37,6 +37,12 @@ export type CreateItemRequest = {
   title: Scalars['String']['input'];
 };
 
+export type CreateItemResponse = {
+  __typename?: 'CreateItemResponse';
+  item: Item;
+  tags: Array<Scalars['String']['output']>;
+};
+
 export type Item = {
   __typename?: 'Item';
   amount: Scalars['String']['output'];
@@ -58,7 +64,7 @@ export enum ItemStatus {
 export type Mutation = {
   __typename?: 'Mutation';
   confirmUser: ConfirmUserResponse;
-  createItem?: Maybe<Item>;
+  createItem?: Maybe<CreateItemResponse>;
   registerUser: RegisterUserResponse;
   setUsername: SetUsernameResponse;
   signIn: SignInResponse;
@@ -71,7 +77,7 @@ export type MutationConfirmUserArgs = {
 
 
 export type MutationCreateItemArgs = {
-  input?: InputMaybe<CreateItemRequest>;
+  input: CreateItemRequest;
 };
 
 
@@ -100,6 +106,7 @@ export type Query = {
   tags: Array<Tag>;
   userConfirmed: Scalars['Boolean']['output'];
   userHaveUsername: Scalars['Boolean']['output'];
+  users: Array<User>;
   validateToken: TokenValidationResponse;
 };
 
@@ -111,6 +118,11 @@ export type QueryIsUsernameTakenArgs = {
 
 export type QueryTagsArgs = {
   query?: InputMaybe<TagsInput>;
+};
+
+
+export type QueryUsersArgs = {
+  query?: InputMaybe<UsersInput>;
 };
 
 export type RegisterUserResponse = {
@@ -162,6 +174,13 @@ export type User = {
   username?: Maybe<Scalars['String']['output']>;
 };
 
+export type UsersInput = {
+  emailLike?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  usernameLike?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ValidateTokenQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -211,6 +230,20 @@ export type SignInMutationVariables = Exact<{
 
 
 export type SignInMutation = { __typename?: 'Mutation', signIn: { __typename?: 'SignInResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+
+export type CreateItemMutationVariables = Exact<{
+  input: CreateItemRequest;
+}>;
+
+
+export type CreateItemMutation = { __typename?: 'Mutation', createItem?: { __typename?: 'CreateItemResponse', tags: Array<string>, item: { __typename?: 'Item', id: string, title: string, description?: string | null, amount: string, status: ItemStatus, createdAt: any, updatedAt: any } } | null };
+
+export type UsersQueryVariables = Exact<{
+  query?: InputMaybe<UsersInput>;
+}>;
+
+
+export type UsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', username?: string | null, email: string }> };
 
 export type TagsQueryVariables = Exact<{
   query?: InputMaybe<TagsInput>;
@@ -384,6 +417,52 @@ export const SignInDocument = gql`
   })
   export class SignInGQL extends Apollo.Mutation<SignInMutation, SignInMutationVariables> {
     document = SignInDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const CreateItemDocument = gql`
+    mutation CreateItem($input: CreateItemRequest!) {
+  createItem(input: $input) {
+    item {
+      id
+      title
+      description
+      amount
+      status
+      createdAt
+      updatedAt
+    }
+    tags
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class CreateItemGQL extends Apollo.Mutation<CreateItemMutation, CreateItemMutationVariables> {
+    document = CreateItemDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const UsersDocument = gql`
+    query Users($query: UsersInput) {
+  users(query: $query) {
+    username
+    email
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class UsersGQL extends Apollo.Query<UsersQuery, UsersQueryVariables> {
+    document = UsersDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

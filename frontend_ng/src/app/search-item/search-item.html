@@ -1,0 +1,56 @@
+<search tuiSearch>
+  <form [formGroup]="form">
+    <fieldset tuiTextfieldSize="s">
+      <tui-textfield iconStart="@tui.search">
+        <input formControlName="itemName" placeholder="Item Name" tuiTextfield />
+      </tui-textfield>
+
+      <tui-textfield
+        iconStart="@tui.user-round"
+        multi
+        tuiChevron
+        [tuiTextfieldCleaner]="false"
+        [stringify]="userStringify"
+        [disabledItemHandler]="userspreventArbitrary"
+        [rows]="2"
+      >
+        <input
+          tuiInputChip
+          placeholder="Filter by User"
+          formControlName="selectedUsers"
+          #userFilterInput
+          (input)="queryUsers($event)"
+        />
+
+        @if (users() | tuiHideSelected| tuiFilterByInput; as items) {
+          <ng-template tuiTextfieldDropdown>
+            <tui-data-list-wrapper
+              new
+              tuiMultiSelectGroup
+              [items]="items"
+              [itemContent]="userStringify | tuiStringifyContent"
+            />
+          </ng-template>
+        }
+      </tui-textfield>
+
+      <button size="s" tuiButton type="button">Search</button>
+    </fieldset>
+
+    <fieldset>
+      <tui-filter formControlName="itemStatus" size="s" [items]="statusFilters" />
+      <hr />
+      <button
+        appearance="flat"
+        iconStart="@tui.rotate-cw"
+        size="xs"
+        tuiButton
+        type="reset"
+        [disabled]="!count()"
+      >
+        Clear {{ count() ? '(' + count() + ')' : '' }}
+      </button>
+      <span [style.margin-inline-start]="'auto'"> Results: 999 </span>
+    </fieldset>
+  </form>
+</search>

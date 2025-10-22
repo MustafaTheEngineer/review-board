@@ -86,6 +86,7 @@ type ComplexityRoot struct {
 		Tags             func(childComplexity int, query *model.TagsInput) int
 		UserConfirmed    func(childComplexity int) int
 		UserHaveUsername func(childComplexity int) int
+		Users            func(childComplexity int, query *model.UsersInput) int
 		ValidateToken    func(childComplexity int) int
 	}
 
@@ -316,6 +317,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.UserHaveUsername(childComplexity), true
 
+	case "Query.users":
+		if e.complexity.Query.Users == nil {
+			break
+		}
+
+		args, err := ec.field_Query_users_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Users(childComplexity, args["query"].(*model.UsersInput)), true
+
 	case "Query.validateToken":
 		if e.complexity.Query.ValidateToken == nil {
 			break
@@ -434,6 +447,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNewUser,
 		ec.unmarshalInputSignInInput,
 		ec.unmarshalInputTagsInput,
+		ec.unmarshalInputUsersInput,
 	)
 	first := true
 
@@ -628,6 +642,10 @@ extend type Query {
   userConfirmed: Boolean! @validateToken
   userHaveUsername: Boolean! @validateToken
   isUsernameTaken(username: String!): Boolean! @checkIfConfirmed @validateToken
+  users(query: UsersInput): [User!]!
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
 }
 
 type Mutation {
@@ -635,8 +653,7 @@ type Mutation {
     @validateEmail
     @validatePassword
   signIn(input: SignInInput!): SignInResponse! @validateEmail @validatePassword
-  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse!
-    @validateToken
+  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse! @validateToken
   setUsername(username: String!): SetUsernameResponse!
     @validateUsername
     @checkIfConfirmed
@@ -675,6 +692,13 @@ type ConfirmUserResponse {
 type SetUsernameResponse {
   message: String!
   user: User!
+}
+
+input UsersInput {
+  limit: Int
+  offset: Int
+  usernameLike: String
+  emailLike: String
 }
 `, BuiltIn: false},
 }

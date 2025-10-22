@@ -4,6 +4,7 @@ import { Home } from './home/home';
 import { ConfirmAccount } from './confirm-account/confirm-account';
 import { ChooseUsername } from './choose-username/choose-username';
 import { ManageItem } from './manage-item/manage-item';
+import { SearchItem } from './search-item/search-item';
 
 export const routes: Routes = [
   { path: 'entry', component: Entry },
@@ -17,6 +18,10 @@ export const routes: Routes = [
         path: 'item',
         children: [
           {
+            path: 'search',
+            component: SearchItem,
+          },
+          {
             path: 'manage',
             children: [
               {
@@ -27,7 +32,7 @@ export const routes: Routes = [
           },
           {
             path: '',
-            redirectTo: 'manage',
+            redirectTo: 'search',
             pathMatch: 'full',
           },
         ],

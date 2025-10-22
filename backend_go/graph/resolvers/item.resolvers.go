@@ -64,7 +64,7 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 
 	if err == nil {
 		helpers.CreateGraphQLError(ctx, "User already has an item with this title", http.StatusConflict)
-        return nil, nil
+		return nil, nil
 	} else {
 		if err != sql.ErrNoRows {
 			helpers.CreateGraphQLError(ctx, "Error while checking user item", http.StatusConflict)

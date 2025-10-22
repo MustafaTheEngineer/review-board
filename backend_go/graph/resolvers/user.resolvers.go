@@ -7,6 +7,7 @@ package graph
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -17,6 +18,8 @@ import (
 	"github.com/MustafaTheEngineer/review_board/helpers"
 	"github.com/MustafaTheEngineer/review_board/internal/database"
 	"github.com/MustafaTheEngineer/review_board/types"
+	goqu "github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -254,6 +257,67 @@ func (r *queryResolver) IsUsernameTaken(ctx context.Context, username string) (b
 	} else {
 		return true, nil
 	}
+}
+
+// Users is the resolver for the users field.
+func (r *queryResolver) Users(ctx context.Context, query *model.UsersInput) ([]*database.User, error) {
+	queryTags := goqu.Select("email", "username").From("users")
+
+	if query == nil {
+		queryTags = queryTags.Limit(100)
+	} else {
+		expressions := make([]exp.Expression, 0)
+		if query.UsernameLike != nil {
+			expressions = append(expressions, goqu.C("username").ILike("%"+*query.UsernameLike+"%"))
+		}
+		if query.EmailLike != nil {
+			expressions = append(expressions, goqu.C("email").ILike("%"+*query.EmailLike+"%"))
+		}
+
+		if len(expressions) > 0 {
+			queryTags = queryTags.Where(goqu.Or(expressions...))
+		}
+
+		if query.Limit == nil {
+			queryTags = queryTags.Limit(100)
+		} else {
+			queryTags = queryTags.Limit(uint(*query.Limit))
+		}
+		if query.Offset != nil {
+			queryTags = queryTags.Offset(uint(*query.Offset))
+		}
+	}
+
+	var users []*database.User
+	querySQL, _, err := queryTags.ToSQL()
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while building SQL query", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	fmt.Println(querySQL)
+
+	dbUsers, err := dbConfig.DbCfg.SqlDb.Query(querySQL)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+		return nil, nil
+	}
+	defer dbUsers.Close()
+
+	for dbUsers.Next() {
+		var user database.User
+		err := dbUsers.Scan(
+			&user.Username,
+			&user.Email,
+		)
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, "Error while scanning tag", http.StatusInternalServerError)
+			return nil, nil
+		}
+		users = append(users, &user)
+	}
+
+	return users, nil
 }
 
 // Username is the resolver for the username field.

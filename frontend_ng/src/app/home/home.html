@@ -25,7 +25,7 @@
     <span [style.overflow]="'hidden'" [style.text-overflow]="'ellipsis'"> Create </span>
     <ng-template #createList>
       <tui-data-list size="s">
-        <button tuiOption new type="button">Item</button>
+        <button tuiOption new type="button" [routerLink]="['item', 'manage']">Item</button>
         <button tuiOption new type="button">Something else</button>
       </tui-data-list>
     </ng-template>

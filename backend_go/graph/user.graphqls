@@ -16,6 +16,10 @@ extend type Query {
   userConfirmed: Boolean! @validateToken
   userHaveUsername: Boolean! @validateToken
   isUsernameTaken(username: String!): Boolean! @checkIfConfirmed @validateToken
+  users(query: UsersInput): [User!]!
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
 }
 
 type Mutation {
@@ -23,8 +27,7 @@ type Mutation {
     @validateEmail
     @validatePassword
   signIn(input: SignInInput!): SignInResponse! @validateEmail @validatePassword
-  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse!
-    @validateToken
+  confirmUser(input: ConfirmUserInput!): ConfirmUserResponse! @validateToken
   setUsername(username: String!): SetUsernameResponse!
     @validateUsername
     @checkIfConfirmed
@@ -63,4 +66,11 @@ type ConfirmUserResponse {
 type SetUsernameResponse {
   message: String!
   user: User!
+}
+
+input UsersInput {
+  limit: Int
+  offset: Int
+  usernameLike: String
+  emailLike: String
 }

@@ -55,8 +55,11 @@ import { TuiCurrency, TuiCurrencyPipe } from '@taiga-ui/addon-commerce';
 import { TuiForm, TuiHeader } from '@taiga-ui/layout';
 import { BehaviorSubject, catchError, combineLatest, map, of, switchMap, tap } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Tag, TagsGQL } from '../../graphql/generated';
+import { CreateItemGQL, Tag, TagsGQL } from '../../graphql/generated';
 import { error } from 'console';
+import { gql } from 'apollo-angular';
+import { ErrorService } from '../error-service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-manage-item',
@@ -102,6 +105,9 @@ import { error } from 'console';
 })
 export class ManageItem {
   tagsGQL = inject(TagsGQL);
+  createItemGQL = inject(CreateItemGQL);
+  errorService = inject(ErrorService);
+  router = inject(Router);
 
   constructor() {
     afterNextRender(() => {
@@ -250,7 +256,40 @@ export class ManageItem {
     return tags.map((tag) => tag.name);
   });
 
-  onSubmit() {}
+  onSubmit() {
+    let desc: string | undefined = undefined;
+    if (this.itemForm.controls.description.value) {
+      desc = this.itemForm.controls.description.value;
+    }
+    this.createItemGQL
+      .mutate({
+        fetchPolicy: 'network-only',
+        variables: {
+          input: {
+            title: this.itemForm.controls.title.value,
+            description: desc,
+            amount: this.itemForm.controls.amount.value,
+            tags: this.itemForm.controls.tags.value,
+          },
+        },
+      })
+      .pipe(
+        catchError((error) => {
+          this.errorService.alerts
+            .open(`<strong>${error.message}</strong>`, {
+              appearance: 'negative',
+              autoClose: 5000,
+            })
+            .subscribe();
+
+          return of(new Error(error.message));
+        }),
+      ).subscribe(result => {
+        if (!(result instanceof Error)) {
+          this.router.navigate(['home']);
+        }
+      })
+  }
 }
 
 export function forbiddenNameValidator(): ValidatorFn {
@@ -271,3 +310,20 @@ export function forbiddenNameValidator(): ValidatorFn {
     return null;
   };
 }
+
+const CREATE_ITEM = gql`
+  mutation CreateItem($input: CreateItemRequest!) {
+    createItem(input: $input) {
+      item {
+        id
+        title
+        description
+        amount
+        status
+        createdAt
+        updatedAt
+      }
+      tags
+    }
+  }
+`;

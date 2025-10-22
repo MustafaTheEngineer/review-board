@@ -67,3 +67,10 @@ type TagsInput struct {
 type TokenValidationResponse struct {
 	User *database.User `json:"user"`
 }
+
+type UsersInput struct {
+	Limit        *int32  `json:"limit,omitempty"`
+	Offset       *int32  `json:"offset,omitempty"`
+	UsernameLike *string `json:"usernameLike,omitempty"`
+	EmailLike    *string `json:"emailLike,omitempty"`
+}
