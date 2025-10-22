@@ -3,27 +3,6 @@
   <ng-container #viewContainer />
 </div>
 <header tuiNavigationHeader>
-  <button title="Menu" tuiIconButton tuiNavigationDrawer type="button" [(open)]="open">
-    <tui-data-list>
-      @for (group of drawer | keyvalue; track $index) {
-        <tui-opt-group [label]="group.key">
-          @for (item of group.value; track $index) {
-            <button tuiOption new type="button" (click)="open = false">
-              <img alt="icon" [src]="item.icon" />
-              {{ item.name }}
-            </button>
-          }
-        </tui-opt-group>
-      }
-
-      <tui-opt-group>
-        <label tuiOption new>
-          <input size="s" tuiSwitch type="checkbox" [(ngModel)]="switch" />
-          Dark mode
-        </label>
-      </tui-opt-group>
-    </tui-data-list>
-  </button>
   <span tuiNavigationLogo>
     <tui-icon icon="@tui.home" />
     <span tuiFade>A very very long product name</span>
@@ -32,31 +11,26 @@
   <span tuiNavigationSegments>
     <button appearance="secondary-grayscale" tuiButton type="button">Link 1</button>
     <button appearance="secondary-grayscale" tuiButton type="button">Link 2</button>
-    <button
-      appearance="secondary-grayscale"
-      tuiButton
-      tuiChevron
-      tuiDropdownOpen
-      type="button"
-      [tuiDropdown]="products"
-    >
-      <span [style.overflow]="'hidden'" [style.text-overflow]="'ellipsis'">
-        A very very long project
-      </span>
-      <ng-template #products>
+  </span>
+  <hr />
+  <button
+    appearance="secondary-grayscale"
+    iconStart="@tui.plus"
+    type="button"
+    tuiButton
+    tuiChevron
+    tuiDropdownOpen
+    [tuiDropdown]="createList"
+  >
+    <span [style.overflow]="'hidden'" [style.text-overflow]="'ellipsis'"> Create </span>
+    <ng-template #createList>
         <tui-data-list size="s">
           <button tuiOption new type="button">
-            A very very long project
-            <tui-icon icon="@tui.check" [style.font-size.em]="1" [style.margin-left.rem]="0.5" />
+            Item
           </button>
           <button tuiOption new type="button">Something else</button>
         </tui-data-list>
       </ng-template>
-    </button>
-  </span>
-  <hr />
-  <button appearance="secondary-grayscale" iconStart="@tui.plus" tuiButton type="button">
-    Create
   </button>
   <button iconStart="@tui.bell" tuiIconButton type="button">
     Notifications
@@ -72,13 +46,6 @@
         <span tuiFade>A very very long product name</span>
       </button>
     </header>
-    <button iconStart="@tui.search" tuiAsideItem type="button">
-      Search
-
-      <ng-container *ngIf="expanded()">
-        <tui-badge appearance="accent">12</tui-badge>
-      </ng-container>
-    </button>
     <a iconStart="@tui.users" tuiAsideItem [routerLink]="routes.Navigation"> Groups </a>
     <tui-aside-group>
       <button
@@ -96,9 +63,6 @@
         </ng-template>
       </button>
     </tui-aside-group>
-    <button automation-id="hint" iconStart="@tui.heart" tuiAsideItem type="button">
-      <span tuiFade>By default ellipsis is used but you can use fade too</span>
-    </button>
     <button
       iconEnd="@tui.chevron-right"
       iconStart="@tui.ellipsis"
@@ -127,8 +91,6 @@
         </tui-data-list>
       </ng-template>
     </button>
-    <hr />
-    <button iconStart="@tui.plus" tuiAsideItem type="button">Add</button>
     <footer>
       <button iconStart="@tui.star" tuiAsideItem type="button">Favorites</button>
       <button
@@ -144,18 +106,23 @@
   <main tuiNavigationMain>
     <nav compact tuiSubheader>
       <tui-breadcrumbs [itemsLimit]="10">
-        <ng-container *ngFor="let item of breadcrumbs; let last = last">
-          <ng-container *ngIf="last">
-            <strong *tuiItem tuiFade>
-              {{ item }}
-            </strong>
+        @for (item of breadcrumbs; track $index; let last = $last) {
+          <ng-container>
+            @if (last) {
+              <ng-container>
+                <strong *tuiItem tuiFade>
+                  {{ item }}
+                </strong>
+              </ng-container>
+            } @else {
+              <ng-container>
+                <button *tuiItem tuiLink type="button">
+                  {{ item }}
+                </button>
+              </ng-container>
+            }
           </ng-container>
-          <ng-container *ngIf="!last">
-            <button *tuiItem tuiLink type="button">
-              {{ item }}
-            </button>
-          </ng-container>
-        </ng-container>
+        }
       </tui-breadcrumbs>
       <tui-tabs tuiFade>
         <button tuiTab type="button">Default view</button>
@@ -165,40 +132,8 @@
       <button appearance="secondary" tuiButton type="button">Secondary</button>
       <button tuiButton type="button">Primary</button>
     </nav>
-    <ng-container *tuiRepeatTimes="let index of 10">
-      <form
-        tuiAppearance="floating"
-        tuiCardLarge
-        tuiForm="m"
-        [style.grid-column]="'2 / span 7'"
-        [style.margin-top.rem]="1"
-      >
-        <header tuiHeader>
-          <h2 tuiTitle>
-            Registration form
-            <span tuiSubtitle>Tell us about yourself</span>
-          </h2>
-        </header>
-        <tui-textfield>
-          <label tuiLabel>Name</label>
-          <input placeholder="John Wick" tuiTextfield />
-        </tui-textfield>
-        <footer>
-          <button appearance="secondary" tuiButton type="button">Cancel</button>
-          <button tuiButton type="submit">Ok</button>
-        </footer>
-      </form>
-      <div
-        tuiAppearance="outline-grayscale"
-        tuiCardLarge
-        [style.grid-column]="'span 3'"
-        [style.margin-top.rem]="1"
-      >
-        <h2 tuiTitle>
-          Sidebar content
-          <span tuiSubtitle>Use CSS grid to position</span>
-        </h2>
-      </div>
-    </ng-container>
+    <div id="main-route">
+      <router-outlet />
+    </div>
   </main>
 </div>

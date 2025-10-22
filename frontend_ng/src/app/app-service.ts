@@ -27,7 +27,6 @@ export class AppService {
           }),
         )
         .subscribe((result) => {
-          console.log(result);
           if (result instanceof Error) {
             this.user = {
               blocked: false,
