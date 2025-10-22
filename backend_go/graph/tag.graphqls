@@ -1,0 +1,17 @@
+type Tag {
+  id: ID!
+  name: String!
+}
+
+extend type Query {
+  tags(query: TagsInput): [Tag!]!
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
+}
+
+input TagsInput {
+  limit: Int
+  offset: Int
+  like: String
+}

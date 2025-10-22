@@ -35,6 +35,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Tag() TagResolver
 	User() UserResolver
 }
 
@@ -61,8 +62,11 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		IsUsernameTaken func(childComplexity int, username string) int
-		ValidateToken   func(childComplexity int) int
+		IsUsernameTaken  func(childComplexity int, username string) int
+		Tags             func(childComplexity int, query *model.TagsInput) int
+		UserConfirmed    func(childComplexity int) int
+		UserHaveUsername func(childComplexity int) int
+		ValidateToken    func(childComplexity int) int
 	}
 
 	RegisterUserResponse struct {
@@ -78,6 +82,11 @@ type ComplexityRoot struct {
 	SignInResponse struct {
 		Message func(childComplexity int) int
 		User    func(childComplexity int) int
+	}
+
+	Tag struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
 	}
 
 	TokenValidationResponse struct {
@@ -186,6 +195,32 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.IsUsernameTaken(childComplexity, args["username"].(string)), true
 
+	case "Query.tags":
+		if e.complexity.Query.Tags == nil {
+			break
+		}
+
+		args, err := ec.field_Query_tags_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Tags(childComplexity, args["query"].(*model.TagsInput)), true
+
+	case "Query.userConfirmed":
+		if e.complexity.Query.UserConfirmed == nil {
+			break
+		}
+
+		return e.complexity.Query.UserConfirmed(childComplexity), true
+
+	case "Query.userHaveUsername":
+		if e.complexity.Query.UserHaveUsername == nil {
+			break
+		}
+
+		return e.complexity.Query.UserHaveUsername(childComplexity), true
+
 	case "Query.validateToken":
 		if e.complexity.Query.ValidateToken == nil {
 			break
@@ -234,6 +269,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SignInResponse.User(childComplexity), true
+
+	case "Tag.id":
+		if e.complexity.Tag.ID == nil {
+			break
+		}
+
+		return e.complexity.Tag.ID(childComplexity), true
+
+	case "Tag.name":
+		if e.complexity.Tag.Name == nil {
+			break
+		}
+
+		return e.complexity.Tag.Name(childComplexity), true
 
 	case "TokenValidationResponse.user":
 		if e.complexity.TokenValidationResponse.User == nil {
@@ -288,6 +337,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputConfirmUserInput,
 		ec.unmarshalInputNewUser,
 		ec.unmarshalInputSignInInput,
+		ec.unmarshalInputTagsInput,
 	)
 	first := true
 
@@ -391,7 +441,6 @@ var sources = []*ast.Source{
 
 scalar Any
 scalar UUID
-scalar Int64
 
 directive @validateToken on FIELD_DEFINITION
 
@@ -401,6 +450,24 @@ type Query {
 
 type TokenValidationResponse {
   user: User!
+}
+`, BuiltIn: false},
+	{Name: "../tag.graphqls", Input: `type Tag {
+  id: ID!
+  name: String!
+}
+
+extend type Query {
+  tags(query: TagsInput): [Tag!]!
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
+}
+
+input TagsInput {
+  limit: Int
+  offset: Int
+  like: String
 }
 `, BuiltIn: false},
 	{Name: "../user.graphqls", Input: `type User {
@@ -418,6 +485,8 @@ directive @checkIfConfirmed on FIELD_DEFINITION
 directive @validateUsername on FIELD_DEFINITION
 
 extend type Query {
+  userConfirmed: Boolean! @validateToken
+  userHaveUsername: Boolean! @validateToken
   isUsernameTaken(username: String!): Boolean! @checkIfConfirmed @validateToken
 }
 

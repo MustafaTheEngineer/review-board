@@ -4,7 +4,6 @@
 
 scalar Any
 scalar UUID
-scalar Int64
 
 directive @validateToken on FIELD_DEFINITION
 

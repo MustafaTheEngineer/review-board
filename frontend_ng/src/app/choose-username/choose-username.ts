@@ -5,7 +5,9 @@ import { TuiButton, TuiError, TuiGroup, TuiIcon, TuiTextfield } from '@taiga-ui/
 import { TuiTooltip } from '@taiga-ui/kit';
 import { gql } from 'apollo-angular';
 import { catchError, map, of, switchMap } from 'rxjs';
-import { IsUsernameTakenGQL } from '../../graphql/generated';
+import { IsUsernameTakenGQL, SetUsernameGQL } from '../../graphql/generated';
+import { ErrorService } from '../error-service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-choose-username',
@@ -23,7 +25,10 @@ import { IsUsernameTakenGQL } from '../../graphql/generated';
   },
 })
 export class ChooseUsername {
+  router = inject(Router);
+  errorService = inject(ErrorService);
   isUsernameTakenGQL = inject(IsUsernameTakenGQL);
+  setUsernameGQL = inject(SetUsernameGQL);
 
   username = new FormControl('', {
     nonNullable: true,
@@ -69,7 +74,7 @@ export class ChooseUsername {
               return of(new Error('Failed to check username availability'));
             }),
             map((data) => {
-              console.log(data)
+              console.log(data);
               if (data instanceof Error) {
                 return 'Failed to check username availability';
               } else {
@@ -83,6 +88,32 @@ export class ChooseUsername {
       initialValue: null,
     },
   );
+
+  onSubmit() {
+    this.setUsernameGQL
+      .mutate({
+        fetchPolicy: 'network-only',
+        variables: {
+          input: this.username.value,
+        },
+      })
+      .pipe(
+        catchError((error) => {
+          this.errorService.alerts
+            .open(`<strong>${error.message}</strong>`, {
+              appearance: 'negative',
+              autoClose: 5000,
+            })
+            .subscribe();
+          return of(new Error('Failed to set username'));
+        }),
+      )
+      .subscribe((result) => {
+        if (!(result instanceof Error)) {
+          this.router.navigate(['home']);
+        }
+      });
+  }
 }
 
 const IS_USERNAME_TAKEN = gql`

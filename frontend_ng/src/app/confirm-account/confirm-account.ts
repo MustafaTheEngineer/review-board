@@ -61,7 +61,7 @@ export class ConfirmAccount {
       )
       .subscribe((response) => {
         if (!(response instanceof Error)) {
-          this.router.navigate(['home']);
+          this.router.navigate(['choose-username']);
         }
       });
   }

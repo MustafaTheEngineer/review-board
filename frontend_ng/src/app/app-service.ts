@@ -1,19 +1,29 @@
 import { afterNextRender, inject, Injectable, signal } from '@angular/core';
 import { gql } from 'apollo-angular';
-import { User, ValidateTokenGQL } from '../graphql/generated';
-import { catchError, of } from 'rxjs';
+import {
+  User,
+  UserConfirmedGQL,
+  UserHaveUsernameGQL,
+  ValidateTokenGQL,
+} from '../graphql/generated';
+import { catchError, of, switchMap } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AppService {
+  private router = inject(Router);
+  private validateTokenGQL = inject(ValidateTokenGQL);
+  private userConfirmedGQL = inject(UserConfirmedGQL);
+  private userHaveUsernameGQL = inject(UserHaveUsernameGQL);
+
   user: User = {
     blocked: false,
     confirmed: false,
     email: '',
     role: '',
   };
-  private validateTokenGQL = inject(ValidateTokenGQL);
 
   constructor() {
     afterNextRender(() => {
@@ -25,21 +35,47 @@ export class AppService {
           catchError((error) => {
             return of(new Error('Failed to validate token'));
           }),
-        )
-        .subscribe((result) => {
-          if (result instanceof Error) {
-            this.user = {
-              blocked: false,
-              confirmed: false,
-              email: '',
-              role: '',
-            };
-          } else {
-            if (result.data?.validateToken) {
-              this.user = result.data.validateToken.user;
+          switchMap((result) => {
+            if (result instanceof Error) {
+              this.user = {
+                blocked: false,
+                confirmed: false,
+                email: '',
+                role: '',
+              };
+
+              return of(null);
+            } else {
+              if (result.data?.validateToken) this.user = result.data?.validateToken.user;
+
+              return this.userConfirmedGQL
+                .fetch({
+                  fetchPolicy: 'network-only',
+                })
+                .pipe(
+                  switchMap((data) => {
+                    if (data.error || !data.data?.userConfirmed) {
+                      this.router.navigate(['confirm-account']);
+                      return of(null);
+                    }
+                    return this.userHaveUsernameGQL.fetch({
+                      fetchPolicy: 'network-only'
+                    }).pipe(
+                      switchMap(data => {
+                        if (data.error || !data.data?.userHaveUsername) {
+                          this.router.navigate(['choose-username']);
+                          return of(null);
+                        }
+                        this.router.navigate(['home']);
+                        return of(true);
+                      })
+                    )
+                  }),
+                );
             }
-          }
-        });
+          }),
+        )
+        .subscribe();
     });
   }
 }
@@ -55,5 +91,17 @@ const VALIDATE_TOKEN = gql`
         role
       }
     }
+  }
+`;
+
+const USER_CONFIRMED = gql`
+  query UserConfirmed {
+    userConfirmed
+  }
+`;
+
+const HAVE_USERNAME = gql`
+  query UserHaveUsername {
+    userHaveUsername
   }
 `;

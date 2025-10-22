@@ -21,6 +21,6 @@ EXECUTE FUNCTION update_updated_at_column();
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TRIGGER IF EXISTS update_tags_updated_at ON tags;
 DROP TABLE IF EXISTS tags;
+DROP TRIGGER IF EXISTS update_tags_updated_at ON tags;
 -- +goose StatementEnd

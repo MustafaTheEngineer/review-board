@@ -1,4 +1,4 @@
-<form tuiForm="l" [formGroup]="itemForm" [style.max-width.rem]="35">
+<form tuiForm="l" [formGroup]="itemForm" (ngSubmit)="onSubmit()">
   <header tuiHeader>
     <h3 tuiTitle>New Item</h3>
   </header>
@@ -19,11 +19,12 @@
 
     <input tuiInputNumber formControlName="amount" [prefix]="'USD' | tuiCurrency" />
   </tui-textfield>
+    <tui-error [error]="amountError()" />
 
   <tui-textfield multi>
-    <input placeholder="Tags" tuiInputChip formControlName="tags" />
+    <input placeholder="Tags" formControlName="tags" tuiInputChip (input)="onTagInput($event)" />
     <tui-input-chip *tuiItem />
-    @if (items | tuiHideSelected | tuiFilterByInput; as items) {
+    @if (tagStrings() | tuiHideSelected | tuiFilterByInput; as items) {
       <ng-container>
         @if (items.length) {
           <ng-template tuiTextfieldDropdown>
@@ -33,4 +34,8 @@
       </ng-container>
     }
   </tui-textfield>
+  <tui-error [error]="tagsError()" />
+
+  <button tuiButton type="submit" [disabled]="itemForm.invalid">Add</button>
 </form>
+

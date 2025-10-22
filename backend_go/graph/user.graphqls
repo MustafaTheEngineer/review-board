@@ -13,6 +13,8 @@ directive @checkIfConfirmed on FIELD_DEFINITION
 directive @validateUsername on FIELD_DEFINITION
 
 extend type Query {
+  userConfirmed: Boolean! @validateToken
+  userHaveUsername: Boolean! @validateToken
   isUsernameTaken(username: String!): Boolean! @checkIfConfirmed @validateToken
 }
 

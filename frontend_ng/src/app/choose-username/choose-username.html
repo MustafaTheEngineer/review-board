@@ -7,6 +7,6 @@
     <tui-error [error]="usernameError()" />
   </div>
   <div id="submit-button">
-    <button tuiButton type="button" [disabled]="username.invalid">Approve</button>
+    <button tuiButton type="button" [disabled]="username.invalid" (click)="onSubmit()">Approve</button>
   </div>
 </div>

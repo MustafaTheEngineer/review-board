@@ -16,7 +16,6 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   Any: { input: any; output: any; }
-  Int64: { input: any; output: any; }
   UUID: { input: any; output: any; }
 };
 
@@ -66,12 +65,20 @@ export type NewUser = {
 export type Query = {
   __typename?: 'Query';
   isUsernameTaken: Scalars['Boolean']['output'];
+  tags: Array<Tag>;
+  userConfirmed: Scalars['Boolean']['output'];
+  userHaveUsername: Scalars['Boolean']['output'];
   validateToken: TokenValidationResponse;
 };
 
 
 export type QueryIsUsernameTakenArgs = {
   username: Scalars['String']['input'];
+};
+
+
+export type QueryTagsArgs = {
+  query?: InputMaybe<TagsInput>;
 };
 
 export type RegisterUserResponse = {
@@ -97,6 +104,18 @@ export type SignInResponse = {
   user: User;
 };
 
+export type Tag = {
+  __typename?: 'Tag';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type TagsInput = {
+  like?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type TokenValidationResponse = {
   __typename?: 'TokenValidationResponse';
   user: User;
@@ -115,6 +134,16 @@ export type ValidateTokenQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ValidateTokenQuery = { __typename?: 'Query', validateToken: { __typename?: 'TokenValidationResponse', user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+
+export type UserConfirmedQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UserConfirmedQuery = { __typename?: 'Query', userConfirmed: boolean };
+
+export type UserHaveUsernameQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UserHaveUsernameQuery = { __typename?: 'Query', userHaveUsername: boolean };
 
 export type IsUsernameTakenQueryVariables = Exact<{
   input: Scalars['String']['input'];
@@ -151,6 +180,13 @@ export type SignInMutationVariables = Exact<{
 
 export type SignInMutation = { __typename?: 'Mutation', signIn: { __typename?: 'SignInResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
 
+export type TagsQueryVariables = Exact<{
+  query?: InputMaybe<TagsInput>;
+}>;
+
+
+export type TagsQuery = { __typename?: 'Query', tags: Array<{ __typename?: 'Tag', id: string, name: string }> };
+
 export const ValidateTokenDocument = gql`
     query ValidateToken {
   validateToken {
@@ -170,6 +206,38 @@ export const ValidateTokenDocument = gql`
   })
   export class ValidateTokenGQL extends Apollo.Query<ValidateTokenQuery, ValidateTokenQueryVariables> {
     document = ValidateTokenDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const UserConfirmedDocument = gql`
+    query UserConfirmed {
+  userConfirmed
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class UserConfirmedGQL extends Apollo.Query<UserConfirmedQuery, UserConfirmedQueryVariables> {
+    document = UserConfirmedDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const UserHaveUsernameDocument = gql`
+    query UserHaveUsername {
+  userHaveUsername
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class UserHaveUsernameGQL extends Apollo.Query<UserHaveUsernameQuery, UserHaveUsernameQueryVariables> {
+    document = UserHaveUsernameDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);
@@ -284,6 +352,25 @@ export const SignInDocument = gql`
   })
   export class SignInGQL extends Apollo.Mutation<SignInMutation, SignInMutationVariables> {
     document = SignInDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const TagsDocument = gql`
+    query Tags($query: TagsInput) {
+  tags(query: $query) {
+    id
+    name
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class TagsGQL extends Apollo.Query<TagsQuery, TagsQueryVariables> {
+    document = TagsDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);
