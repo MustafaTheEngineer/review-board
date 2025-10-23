@@ -47,6 +47,9 @@ export type Item = {
   __typename?: 'Item';
   amount: Scalars['String']['output'];
   createdAt: Scalars['Date']['output'];
+  creatorID: Scalars['ID']['output'];
+  deletedAt?: Maybe<Scalars['Date']['output']>;
+  deletedByUserID?: Maybe<Scalars['ID']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   status: ItemStatus;
@@ -60,6 +63,15 @@ export enum ItemStatus {
   New = 'NEW',
   Rejected = 'REJECTED'
 }
+
+export type ItemsRequest = {
+  like?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  statuses?: InputMaybe<Array<ItemStatus>>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  users?: InputMaybe<Array<Scalars['String']['input']>>;
+};
 
 export type Mutation = {
   __typename?: 'Mutation';
@@ -103,6 +115,7 @@ export type NewUser = {
 export type Query = {
   __typename?: 'Query';
   isUsernameTaken: Scalars['Boolean']['output'];
+  items: Array<Item>;
   tags: Array<Tag>;
   userConfirmed: Scalars['Boolean']['output'];
   userHaveUsername: Scalars['Boolean']['output'];
@@ -113,6 +126,11 @@ export type Query = {
 
 export type QueryIsUsernameTakenArgs = {
   username: Scalars['String']['input'];
+};
+
+
+export type QueryItemsArgs = {
+  query?: InputMaybe<ItemsRequest>;
 };
 
 
@@ -170,6 +188,7 @@ export type User = {
   blocked: Scalars['Boolean']['output'];
   confirmed: Scalars['Boolean']['output'];
   email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
   role: Scalars['String']['output'];
   username?: Maybe<Scalars['String']['output']>;
 };
@@ -184,7 +203,7 @@ export type UsersInput = {
 export type ValidateTokenQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ValidateTokenQuery = { __typename?: 'Query', validateToken: { __typename?: 'TokenValidationResponse', user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+export type ValidateTokenQuery = { __typename?: 'Query', validateToken: { __typename?: 'TokenValidationResponse', user: { __typename?: 'User', id: string, email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
 
 export type UserConfirmedQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -243,7 +262,14 @@ export type UsersQueryVariables = Exact<{
 }>;
 
 
-export type UsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', username?: string | null, email: string }> };
+export type UsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, username?: string | null, email: string }> };
+
+export type ItemsQueryVariables = Exact<{
+  query?: InputMaybe<ItemsRequest>;
+}>;
+
+
+export type ItemsQuery = { __typename?: 'Query', items: Array<{ __typename?: 'Item', id: string, title: string, description?: string | null, amount: string, status: ItemStatus, createdAt: any, updatedAt: any }> };
 
 export type TagsQueryVariables = Exact<{
   query?: InputMaybe<TagsInput>;
@@ -256,6 +282,7 @@ export const ValidateTokenDocument = gql`
     query ValidateToken {
   validateToken {
     user {
+      id
       email
       username
       confirmed
@@ -452,6 +479,7 @@ export const CreateItemDocument = gql`
 export const UsersDocument = gql`
     query Users($query: UsersInput) {
   users(query: $query) {
+    id
     username
     email
   }
@@ -463,6 +491,30 @@ export const UsersDocument = gql`
   })
   export class UsersGQL extends Apollo.Query<UsersQuery, UsersQueryVariables> {
     document = UsersDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const ItemsDocument = gql`
+    query Items($query: ItemsRequest) {
+  items(query: $query) {
+    id
+    title
+    description
+    amount
+    status
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ItemsGQL extends Apollo.Query<ItemsQuery, ItemsQueryVariables> {
+    document = ItemsDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

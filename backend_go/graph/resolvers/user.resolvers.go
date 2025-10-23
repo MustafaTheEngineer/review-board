@@ -7,7 +7,6 @@ package graph
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -261,7 +260,7 @@ func (r *queryResolver) IsUsernameTaken(ctx context.Context, username string) (b
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, query *model.UsersInput) ([]*database.User, error) {
-	queryTags := goqu.Select("email", "username").From("users")
+	queryTags := goqu.Select("id", "email", "username").From("users")
 
 	if query == nil {
 		queryTags = queryTags.Limit(100)
@@ -295,8 +294,6 @@ func (r *queryResolver) Users(ctx context.Context, query *model.UsersInput) ([]*
 		return nil, nil
 	}
 
-	fmt.Println(querySQL)
-
 	dbUsers, err := dbConfig.DbCfg.SqlDb.Query(querySQL)
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
@@ -307,6 +304,7 @@ func (r *queryResolver) Users(ctx context.Context, query *model.UsersInput) ([]*
 	for dbUsers.Next() {
 		var user database.User
 		err := dbUsers.Scan(
+			&user.ID,
 			&user.Username,
 			&user.Email,
 		)
@@ -318,6 +316,11 @@ func (r *queryResolver) Users(ctx context.Context, query *model.UsersInput) ([]*
 	}
 
 	return users, nil
+}
+
+// ID is the resolver for the id field.
+func (r *userResolver) ID(ctx context.Context, obj *database.User) (string, error) {
+	return obj.ID.String(), nil
 }
 
 // Username is the resolver for the username field.

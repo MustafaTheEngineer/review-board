@@ -16,6 +16,8 @@ import (
 	"github.com/MustafaTheEngineer/review_board/helpers"
 	"github.com/MustafaTheEngineer/review_board/internal/database"
 	"github.com/MustafaTheEngineer/review_board/types"
+	goqu "github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
 )
 
@@ -24,9 +26,39 @@ func (r *itemResolver) ID(ctx context.Context, obj *database.Item) (string, erro
 	return obj.ID.String(), nil
 }
 
+// CreatorID is the resolver for the creatorID field.
+func (r *itemResolver) CreatorID(ctx context.Context, obj *database.Item) (string, error) {
+	return obj.CreatorID.String(), nil
+}
+
 // Description is the resolver for the description field.
 func (r *itemResolver) Description(ctx context.Context, obj *database.Item) (*string, error) {
 	return &obj.Description.String, nil
+}
+
+// DeletedByUserID is the resolver for the deletedByUserID field.
+func (r *itemResolver) DeletedByUserID(ctx context.Context, obj *database.Item) (*string, error) {
+	deletedByID := obj.DeletedByUserID.UUID.String()
+	var ID *string
+	if !obj.DeletedByUserID.Valid {
+		return ID, nil
+	}
+	ID = &deletedByID
+
+	return ID, nil
+}
+
+// DeletedAt is the resolver for the deletedAt field.
+func (r *itemResolver) DeletedAt(ctx context.Context, obj *database.Item) (*string, error) {
+	deletedAtID := obj.DeletedAt.Time.Format("2006-01-02T15:04:05Z07:00")
+	var deletedTime *string
+	if !obj.DeletedAt.Valid {
+		return nil, nil
+	}
+
+	deletedTime = &deletedAtID
+
+	return deletedTime, nil
 }
 
 // CreatedAt is the resolver for the createdAt field.
@@ -88,10 +120,10 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 			Valid: input.Description != nil,
 		},
 		Amount: fmt.Sprintf("%f", input.Amount),
-		Status: "new",
+		Status: "NEW",
 	})
 	if err != nil {
-		helpers.CreateGraphQLError(ctx, "Error while inserting item", http.StatusInternalServerError)
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
 		return nil, nil
 	}
 
@@ -134,6 +166,79 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 		Item: &dbItem,
 		Tags: tags,
 	}, tx.Commit()
+}
+
+// Items is the resolver for the items field.
+func (r *queryResolver) Items(ctx context.Context, query *model.ItemsRequest) ([]*database.Item, error) {
+	queryTags := goqu.Select("*").From("items")
+	expressions := make([]exp.Expression, 0)
+
+	if query == nil {
+		queryTags = queryTags.Limit(100)
+	} else {
+		if len(query.Users) > 0 {
+			expressions = append(expressions, goqu.C("creator_id").In(query.Users))
+		}
+		if len(query.Tags) > 0 {
+			tag := goqu.Select("item_id").From("item_tags").Where(goqu.C("tag_id").In(query.Tags))
+
+			expressions = append(expressions, goqu.C("id").In(tag))
+		}
+		if len(query.Statuses) > 0 {
+			expressions = append(expressions, goqu.C("status").In(query.Statuses))
+		}
+		if query.Like != nil {
+			expressions = append(expressions, goqu.C("title").Like("%"+*query.Like+"%"))
+		}
+		if query.Limit == nil {
+			queryTags = queryTags.Limit(100)
+		} else {
+			queryTags = queryTags.Limit(uint(*query.Limit))
+		}
+		if query.Offset != nil {
+			queryTags = queryTags.Offset(uint(*query.Offset))
+		}
+
+		if len(expressions) > 0 {
+			queryTags = queryTags.Where(goqu.And(expressions...))
+		}
+	}
+
+	var items []*database.Item
+	querySQL, _, err := queryTags.ToSQL()
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while fetching items", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	dbItems, err := dbConfig.DbCfg.SqlDb.Query(querySQL)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while fetching items", http.StatusInternalServerError)
+		return nil, nil
+	}
+	defer dbItems.Close()
+	for dbItems.Next() {
+		var item database.Item
+		err := dbItems.Scan(
+			&item.ID,
+			&item.CreatorID,
+			&item.Title,
+			&item.Description,
+			&item.Amount,
+			&item.Status,
+			&item.DeletedByUserID,
+			&item.DeletedAt,
+			&item.CreatedAt,
+			&item.UpdatedAt,
+		)
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, "Error while scanning item", http.StatusInternalServerError)
+			return nil, nil
+		}
+		items = append(items, &item)
+	}
+
+	return items, nil
 }
 
 // Item returns graph.ItemResolver implementation.

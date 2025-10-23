@@ -11,10 +11,13 @@ enum ItemStatus {
 
 type Item {
   id: ID!
+  creatorID: ID!
   title: String!
   description: String
   amount: String!
   status: ItemStatus!
+  deletedByUserID: ID
+  deletedAt: Date
   createdAt: Date!
   updatedAt: Date!
 }
@@ -39,4 +42,17 @@ input CreateItemRequest {
 type CreateItemResponse {
   item: Item!
   tags: [String!]!
+}
+
+extend type Query {
+  items(query: ItemsRequest): [Item!]!
+}
+
+input ItemsRequest {
+  like: String
+  users: [String!]
+  tags: [String!]
+  statuses: [ItemStatus!]
+  limit: Int
+  offset: Int
 }

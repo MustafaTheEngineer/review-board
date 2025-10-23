@@ -36,7 +36,15 @@ import {
 } from '@taiga-ui/kit';
 import { TuiSearch } from '@taiga-ui/layout';
 import { catchError, map, of } from 'rxjs';
-import { ItemStatus, Tag, TagsGQL, User, UsersGQL, UsersQuery } from '../../graphql/generated';
+import {
+  ItemsGQL,
+  ItemStatus,
+  Tag,
+  TagsGQL,
+  User,
+  UsersGQL,
+  UsersQuery,
+} from '../../graphql/generated';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { TuiAmountPipe } from '@taiga-ui/addon-commerce';
 import { gql } from 'apollo-angular';
@@ -78,6 +86,7 @@ import { gql } from 'apollo-angular';
 export class SearchItem {
   usersGQL = inject(UsersGQL);
   tagsGQL = inject(TagsGQL);
+  itemsGQL = inject(ItemsGQL);
 
   constructor() {
     this.usersGQL
@@ -116,36 +125,27 @@ export class SearchItem {
   }
 
   protected readonly form = new FormGroup({
-    itemName: new FormControl(''),
-    selectedUsers: new FormControl<
-      Array<{
-        username?: string | null;
-        email: string;
-      }>
-    >([], {
+    itemName: new FormControl('', {
+      nonNullable: true,
+    }),
+    selectedUsers: new FormControl<UserPartial[]>([], {
       nonNullable: true,
     }),
     selectedTags: new FormControl<Tag[]>([], {
       nonNullable: true,
     }),
-    itemStatus: new FormControl<ItemStatus[]>([]),
+    itemStatus: new FormControl<ItemStatus[]>([], {
+      nonNullable: true,
+    }),
   });
 
-  protected readonly users = signal<
-    Array<{
-      username?: string | null;
-      email: string;
-    }>
-  >([]);
-  protected readonly userspreventArbitrary = (user: {
-    username?: string | null;
-    email: string;
-  }): boolean => this.users().find((arrUser) => arrUser.email === user.email) === undefined;
-  protected readonly userStringify = (user: { username?: string | null; email: string }): string =>
+  protected readonly users = signal<UserPartial[]>([]);
+  protected readonly userspreventArbitrary = (user: UserPartial): boolean =>
+    this.users().find((arrUser) => arrUser.id === user.id) === undefined;
+  protected readonly userStringify = (user: UserPartial): string =>
     `${user.email} - ${user.username}`;
 
   queryUsers(event: Event) {
-    console.log(this.form.controls.selectedUsers.value);
     const value = (event.currentTarget as HTMLInputElement).value;
     this.usersGQL
       .fetch({
@@ -176,7 +176,6 @@ export class SearchItem {
     this.tags().find((arrTag) => arrTag.id === tag.id) === undefined;
   protected readonly tagStringify = (tag: Tag): string => tag.name;
   queryTags(event: Event) {
-    console.log(this.form.controls.selectedTags.value);
     const value = (event.currentTarget as HTMLInputElement).value;
     this.tagsGQL
       .fetch({
@@ -209,7 +208,28 @@ export class SearchItem {
   statusesStringify = (status: ItemStatus): string => Object.values(status)[0].replaceAll('_', ' ');
 
   onSubmit() {
-    console.log(this.form.value);
+    const { itemName, selectedUsers, selectedTags, itemStatus } = this.form.value;
+
+    this.itemsGQL
+      .fetch({
+        fetchPolicy: 'network-only',
+        variables: {
+          query: {
+            like: itemName,
+            users: !selectedUsers?.length ? undefined : selectedUsers.map((user) => user.id),
+            tags: !selectedTags?.length ? undefined : selectedTags.map((tag) => tag.id),
+            statuses: !itemStatus || !itemStatus.length ? [] : itemStatus,
+          },
+        },
+      })
+      .pipe(
+        catchError((error) => {
+          return of(new Error(error.message));
+        }),
+      )
+      .subscribe((result) => {
+        console.log(result);
+      });
   }
 
   protected readonly count = toSignal(
@@ -218,11 +238,28 @@ export class SearchItem {
   );
 }
 
+type UserPartial = Pick<User, 'id' | 'username' | 'email'>;
+
 const USERS = gql`
   query Users($query: UsersInput) {
     users(query: $query) {
+      id
       username
       email
+    }
+  }
+`;
+
+const ITEMS = gql`
+  query Items($query: ItemsRequest) {
+    items(query: $query) {
+      id
+      title
+      description
+      amount
+      status
+      createdAt
+      updatedAt
     }
   }
 `;

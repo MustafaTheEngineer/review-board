@@ -27,6 +27,15 @@ type CreateItemResponse struct {
 	Tags []string       `json:"tags"`
 }
 
+type ItemsRequest struct {
+	Like     *string               `json:"like,omitempty"`
+	Users    []string              `json:"users,omitempty"`
+	Tags     []string              `json:"tags,omitempty"`
+	Statuses []database.ItemStatus `json:"statuses,omitempty"`
+	Limit    *int32                `json:"limit,omitempty"`
+	Offset   *int32                `json:"offset,omitempty"`
+}
+
 type Mutation struct {
 }
 

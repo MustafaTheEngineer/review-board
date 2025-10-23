@@ -7,7 +7,7 @@ CREATE TABLE items (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     amount NUMERIC(10, 2) NOT NULL,
-    status item_status NOT NULL DEFAULT 'new',
+    status item_status NOT NULL DEFAULT 'NEW',
 
     deleted_by_user_id UUID,
     deleted_at TIMESTAMP,

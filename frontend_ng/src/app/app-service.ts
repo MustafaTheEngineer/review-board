@@ -19,6 +19,7 @@ export class AppService {
   private userHaveUsernameGQL = inject(UserHaveUsernameGQL);
 
   user: User = {
+    id: '',
     blocked: false,
     confirmed: false,
     email: '',
@@ -38,6 +39,7 @@ export class AppService {
           switchMap((result) => {
             if (result instanceof Error) {
               this.user = {
+                id: '',
                 blocked: false,
                 confirmed: false,
                 email: '',
@@ -84,6 +86,7 @@ const VALIDATE_TOKEN = gql`
   query ValidateToken {
     validateToken {
       user {
+        id
         email
         username
         confirmed

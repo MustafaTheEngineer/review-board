@@ -64,13 +64,16 @@ type ComplexityRoot struct {
 	}
 
 	Item struct {
-		Amount      func(childComplexity int) int
-		CreatedAt   func(childComplexity int) int
-		Description func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Status      func(childComplexity int) int
-		Title       func(childComplexity int) int
-		UpdatedAt   func(childComplexity int) int
+		Amount          func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		CreatorID       func(childComplexity int) int
+		DeletedAt       func(childComplexity int) int
+		DeletedByUserID func(childComplexity int) int
+		Description     func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Status          func(childComplexity int) int
+		Title           func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -83,6 +86,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		IsUsernameTaken  func(childComplexity int, username string) int
+		Items            func(childComplexity int, query *model.ItemsRequest) int
 		Tags             func(childComplexity int, query *model.TagsInput) int
 		UserConfirmed    func(childComplexity int) int
 		UserHaveUsername func(childComplexity int) int
@@ -118,6 +122,7 @@ type ComplexityRoot struct {
 		Blocked   func(childComplexity int) int
 		Confirmed func(childComplexity int) int
 		Email     func(childComplexity int) int
+		ID        func(childComplexity int) int
 		Role      func(childComplexity int) int
 		Username  func(childComplexity int) int
 	}
@@ -183,6 +188,27 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Item.CreatedAt(childComplexity), true
+
+	case "Item.creatorID":
+		if e.complexity.Item.CreatorID == nil {
+			break
+		}
+
+		return e.complexity.Item.CreatorID(childComplexity), true
+
+	case "Item.deletedAt":
+		if e.complexity.Item.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.Item.DeletedAt(childComplexity), true
+
+	case "Item.deletedByUserID":
+		if e.complexity.Item.DeletedByUserID == nil {
+			break
+		}
+
+		return e.complexity.Item.DeletedByUserID(childComplexity), true
 
 	case "Item.description":
 		if e.complexity.Item.Description == nil {
@@ -290,6 +316,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.IsUsernameTaken(childComplexity, args["username"].(string)), true
+
+	case "Query.items":
+		if e.complexity.Query.Items == nil {
+			break
+		}
+
+		args, err := ec.field_Query_items_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Items(childComplexity, args["query"].(*model.ItemsRequest)), true
 
 	case "Query.tags":
 		if e.complexity.Query.Tags == nil {
@@ -420,6 +458,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.User.Email(childComplexity), true
 
+	case "User.id":
+		if e.complexity.User.ID == nil {
+			break
+		}
+
+		return e.complexity.User.ID(childComplexity), true
+
 	case "User.role":
 		if e.complexity.User.Role == nil {
 			break
@@ -444,6 +489,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputConfirmUserInput,
 		ec.unmarshalInputCreateItemRequest,
+		ec.unmarshalInputItemsRequest,
 		ec.unmarshalInputNewUser,
 		ec.unmarshalInputSignInInput,
 		ec.unmarshalInputTagsInput,
@@ -558,10 +604,13 @@ enum ItemStatus {
 
 type Item {
   id: ID!
+  creatorID: ID!
   title: String!
   description: String
   amount: String!
   status: ItemStatus!
+  deletedByUserID: ID
+  deletedAt: Date
   createdAt: Date!
   updatedAt: Date!
 }
@@ -586,6 +635,19 @@ input CreateItemRequest {
 type CreateItemResponse {
   item: Item!
   tags: [String!]!
+}
+
+extend type Query {
+  items(query: ItemsRequest): [Item!]!
+}
+
+input ItemsRequest {
+  like: String
+  users: [String!]
+  tags: [String!]
+  statuses: [ItemStatus!]
+  limit: Int
+  offset: Int
 }
 `, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `# GraphQL schema example
@@ -625,6 +687,7 @@ input TagsInput {
 }
 `, BuiltIn: false},
 	{Name: "../user.graphqls", Input: `type User {
+  id: ID!
   email: String!
   username: String
   confirmed: Boolean!

@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TYPE item_status AS ENUM ('new', 'in_review', 'approved', 'rejected');
+CREATE TYPE item_status AS ENUM ('NEW', 'IN_REVIEW', 'APPROVED', 'REJECTED');
 -- +goose StatementEnd
 
 -- +goose Down
