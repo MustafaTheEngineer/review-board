@@ -52,6 +52,28 @@ func (q *Queries) InsertItem(ctx context.Context, arg InsertItemParams) (Item, e
 	return i, err
 }
 
+const itemById = `-- name: ItemById :one
+SELECT id, creator_id, title, description, amount, status, deleted_by_user_id, deleted_at, created_at, updated_at FROM items WHERE id = $1
+`
+
+func (q *Queries) ItemById(ctx context.Context, id uuid.UUID) (Item, error) {
+	row := q.db.QueryRowContext(ctx, itemById, id)
+	var i Item
+	err := row.Scan(
+		&i.ID,
+		&i.CreatorID,
+		&i.Title,
+		&i.Description,
+		&i.Amount,
+		&i.Status,
+		&i.DeletedByUserID,
+		&i.DeletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const selectUserItem = `-- name: SelectUserItem :one
 SELECT id, creator_id, title, description, amount, status, deleted_by_user_id, deleted_at, created_at, updated_at FROM items WHERE creator_id = $1 AND  title = $2
 `

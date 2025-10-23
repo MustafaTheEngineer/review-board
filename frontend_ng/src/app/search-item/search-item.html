@@ -1,85 +1,130 @@
-<search tuiSearch>
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <fieldset tuiTextfieldSize="s">
-      <tui-textfield iconStart="@tui.search">
-        <input formControlName="itemName" placeholder="Item Title" tuiTextfield />
-      </tui-textfield>
+<div id="container">
+  <search tuiSearch>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <fieldset tuiTextfieldSize="s">
+        <tui-textfield iconStart="@tui.search">
+          <input formControlName="itemName" placeholder="Item Title" tuiTextfield />
+        </tui-textfield>
 
-      <tui-textfield
-        iconStart="@tui.user-round"
-        multi
-        tuiChevron
-        [tuiTextfieldCleaner]="false"
-        [stringify]="userStringify"
-        [disabledItemHandler]="userspreventArbitrary"
-        [rows]="2"
-      >
-        <input
-          tuiInputChip
-          placeholder="Filter by User"
-          formControlName="selectedUsers"
-          (input)="queryUsers($event)"
+        <tui-textfield
+          iconStart="@tui.user-round"
+          multi
+          tuiChevron
+          [tuiTextfieldCleaner]="false"
+          [stringify]="userStringify"
+          [disabledItemHandler]="userspreventArbitrary"
+          [rows]="2"
+        >
+          <input
+            tuiInputChip
+            placeholder="Filter by User"
+            formControlName="selectedUsers"
+            (input)="queryUsers($event)"
+          />
+
+          @if (users() | tuiFilterByInput; as items) {
+            <ng-template tuiTextfieldDropdown>
+              <tui-data-list-wrapper
+                new
+                tuiMultiSelectGroup
+                [items]="items"
+                [itemContent]="userStringify | tuiStringifyContent"
+              />
+            </ng-template>
+          }
+        </tui-textfield>
+
+        <button size="s" tuiButton type="submit">Search</button>
+      </fieldset>
+
+      <fieldset tuiTextfieldSize="s">
+        <tui-textfield
+          iconStart="@tui.tag"
+          multi
+          tuiChevron
+          [tuiTextfieldCleaner]="false"
+          [stringify]="tagStringify"
+          [disabledItemHandler]="tagspreventArbitrary"
+          [rows]="2"
+        >
+          <input
+            tuiInputChip
+            placeholder="Filter by Tag"
+            formControlName="selectedTags"
+            (input)="queryTags($event)"
+          />
+
+          @if (tags() | tuiFilterByInput; as tags) {
+            <ng-template tuiTextfieldDropdown>
+              <tui-data-list-wrapper
+                new
+                tuiMultiSelectGroup
+                [items]="tags"
+                [itemContent]="tagStringify | tuiStringifyContent"
+              />
+            </ng-template>
+          }
+        </tui-textfield>
+      </fieldset>
+
+      <fieldset tuiTextfieldSize="s">
+        <tui-filter
+          formControlName="itemStatus"
+          size="s"
+          [items]="itemService.itemStatuses"
+          [content]="itemService.statusesStringify"
         />
+        <hr />
+        <button
+          appearance="flat"
+          iconStart="@tui.rotate-cw"
+          size="m"
+          tuiButton
+          type="reset"
+          [disabled]="!count()"
+        >
+          Clear {{ count() ? '(' + count() + ')' : '' }}
+        </button>
+        <span [style.margin-inline-start]="'auto'"> Results: {{ items().length }} </span>
+      </fieldset>
+    </form>
+  </search>
 
-        @if (users() | tuiFilterByInput; as items) {
-          <ng-template tuiTextfieldDropdown>
-            <tui-data-list-wrapper
-              new
-              tuiMultiSelectGroup
-              [items]="items"
-              [itemContent]="userStringify | tuiStringifyContent"
-            />
-          </ng-template>
-        }
-      </tui-textfield>
+  <div tuiAppearance="floating" tuiCardLarge id="items-container">
+    <section id="items">
+      @for (item of items(); track $index) {
+        <div tuiAppearance="floating" tuiCardLarge>
+          <header tuiHeader>
+            <h2 tuiTitle>
+              {{ item.item.title }}
+            </h2>
+            <tui-chip [appearance]="itemService.itemStatusColor(item.item.status)">
+              {{ item.item.status }}
+            </tui-chip>
+          </header>
 
-      <button size="s" tuiButton type="submit">Search</button>
-    </fieldset>
+          <section>
+            {{ item.item.description }}
+          </section>
+          <section class="tags">
+            @for (tag of item.tags; track $index) {
+              <tui-chip appearance="outline">#{{ tag.name }}</tui-chip>
+            }
+          </section>
 
-    <fieldset  tuiTextfieldSize="s">
-      <tui-textfield
-        iconStart="@tui.tag"
-        multi
-        tuiChevron
-        [tuiTextfieldCleaner]="false"
-        [stringify]="tagStringify"
-        [disabledItemHandler]="tagspreventArbitrary"
-        [rows]="2"
-      >
-        <input
-          tuiInputChip
-          placeholder="Filter by Tag"
-          formControlName="selectedTags"
-          (input)="queryTags($event)"
-        />
-
-        @if (tags() | tuiFilterByInput; as tags) {
-          <ng-template tuiTextfieldDropdown>
-            <tui-data-list-wrapper
-              new
-              tuiMultiSelectGroup
-              [items]="tags"
-              [itemContent]="tagStringify | tuiStringifyContent"
-            />
-          </ng-template>
-        }
-      </tui-textfield>
-    </fieldset>
-
-    <fieldset  tuiTextfieldSize="s">
-      <tui-filter formControlName="itemStatus" size="s" [items]="itemStatuses" [content]="statusesStringify" />
-      <hr />
-      <button
-        appearance="flat"
-        iconStart="@tui.rotate-cw"
-        size="m"
-        tuiButton
-        type="reset"
-        [disabled]="!count()"
-      >
-        Clear {{ count() ? '(' + count() + ')' : '' }}
-      </button>
-      <span [style.margin-inline-start]="'auto'"> Results: 999 </span>
-    </fieldset>
-  </form>
-</search>
+          <footer>
+            <button
+              appearance="secondary"
+              size="m"
+              tuiButton
+              type="button"
+              [routerLink]="['..', item.item.id]"
+            >
+              Details
+            </button>
+          </footer>
+        </div>
+      }
+    </section>
+  </div>
+</div>

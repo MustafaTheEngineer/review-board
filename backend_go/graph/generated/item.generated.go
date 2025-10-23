@@ -412,6 +412,92 @@ func (ec *executionContext) fieldContext_Item_updatedAt(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _ItemsResponse_item(ctx context.Context, field graphql.CollectedField, obj *model.ItemsResponse) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ItemsResponse_item,
+		func(ctx context.Context) (any, error) {
+			return obj.Item, nil
+		},
+		nil,
+		ec.marshalNItem2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItem,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ItemsResponse_item(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemsResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Item_id(ctx, field)
+			case "creatorID":
+				return ec.fieldContext_Item_creatorID(ctx, field)
+			case "title":
+				return ec.fieldContext_Item_title(ctx, field)
+			case "description":
+				return ec.fieldContext_Item_description(ctx, field)
+			case "amount":
+				return ec.fieldContext_Item_amount(ctx, field)
+			case "status":
+				return ec.fieldContext_Item_status(ctx, field)
+			case "deletedByUserID":
+				return ec.fieldContext_Item_deletedByUserID(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Item_deletedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Item_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Item_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Item", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ItemsResponse_tags(ctx context.Context, field graphql.CollectedField, obj *model.ItemsResponse) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ItemsResponse_tags,
+		func(ctx context.Context) (any, error) {
+			return obj.Tags, nil
+		},
+		nil,
+		ec.marshalNTag2ᚕᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐTagᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ItemsResponse_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ItemsResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Tag_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -870,6 +956,50 @@ func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj
 	return out
 }
 
+var itemsResponseImplementors = []string{"ItemsResponse"}
+
+func (ec *executionContext) _ItemsResponse(ctx context.Context, sel ast.SelectionSet, obj *model.ItemsResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, itemsResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ItemsResponse")
+		case "item":
+			out.Values[i] = ec._ItemsResponse_item(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tags":
+			out.Values[i] = ec._ItemsResponse_tags(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
@@ -877,50 +1007,6 @@ func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj
 func (ec *executionContext) unmarshalNCreateItemRequest2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐCreateItemRequest(ctx context.Context, v any) (model.CreateItemRequest, error) {
 	res, err := ec.unmarshalInputCreateItemRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNItem2ᚕᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*database.Item) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNItem2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItem(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalNItem2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItem(ctx context.Context, sel ast.SelectionSet, v *database.Item) graphql.Marshaler {
@@ -950,11 +1036,72 @@ func (ec *executionContext) marshalNItemStatus2githubᚗcomᚋMustafaTheEngineer
 	return res
 }
 
+func (ec *executionContext) marshalNItemsResponse2ᚕᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐItemsResponseᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ItemsResponse) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNItemsResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐItemsResponse(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNItemsResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐItemsResponse(ctx context.Context, sel ast.SelectionSet, v *model.ItemsResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ItemsResponse(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOCreateItemResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐCreateItemResponse(ctx context.Context, sel ast.SelectionSet, v *model.CreateItemResponse) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._CreateItemResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOItem2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItem(ctx context.Context, sel ast.SelectionSet, v *database.Item) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Item(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOItemStatus2ᚕgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItemStatusᚄ(ctx context.Context, v any) ([]database.ItemStatus, error) {

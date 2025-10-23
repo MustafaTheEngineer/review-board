@@ -36,6 +36,11 @@ type ItemsRequest struct {
 	Offset   *int32                `json:"offset,omitempty"`
 }
 
+type ItemsResponse struct {
+	Item *database.Item  `json:"item"`
+	Tags []*database.Tag `json:"tags"`
+}
+
 type Mutation struct {
 }
 

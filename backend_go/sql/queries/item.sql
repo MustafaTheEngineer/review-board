@@ -5,3 +5,6 @@ RETURNING *;
 
 -- name: SelectUserItem :one
 SELECT * FROM items WHERE creator_id = $1 AND  title = $2;
+
+-- name: ItemById :one
+SELECT * FROM items WHERE id = $1;

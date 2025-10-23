@@ -45,7 +45,8 @@ type CreateItemResponse {
 }
 
 extend type Query {
-  items(query: ItemsRequest): [Item!]!
+  items(query: ItemsRequest): [ItemsResponse!]!
+  item(id: ID!): Item
 }
 
 input ItemsRequest {
@@ -55,4 +56,9 @@ input ItemsRequest {
   statuses: [ItemStatus!]
   limit: Int
   offset: Int
+}
+
+type ItemsResponse {
+  item: Item!
+  tags: [Tag!]!
 }

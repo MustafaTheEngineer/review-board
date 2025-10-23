@@ -73,6 +73,12 @@ export type ItemsRequest = {
   users?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type ItemsResponse = {
+  __typename?: 'ItemsResponse';
+  item: Item;
+  tags: Array<Tag>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   confirmUser: ConfirmUserResponse;
@@ -115,7 +121,8 @@ export type NewUser = {
 export type Query = {
   __typename?: 'Query';
   isUsernameTaken: Scalars['Boolean']['output'];
-  items: Array<Item>;
+  item?: Maybe<Item>;
+  items: Array<ItemsResponse>;
   tags: Array<Tag>;
   userConfirmed: Scalars['Boolean']['output'];
   userHaveUsername: Scalars['Boolean']['output'];
@@ -126,6 +133,11 @@ export type Query = {
 
 export type QueryIsUsernameTakenArgs = {
   username: Scalars['String']['input'];
+};
+
+
+export type QueryItemArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -250,6 +262,13 @@ export type SignInMutationVariables = Exact<{
 
 export type SignInMutation = { __typename?: 'Mutation', signIn: { __typename?: 'SignInResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
 
+export type ItemQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ItemQuery = { __typename?: 'Query', item?: { __typename?: 'Item', id: string, creatorID: string, title: string, description?: string | null, amount: string, status: ItemStatus, deletedByUserID?: string | null, deletedAt?: any | null, createdAt: any, updatedAt: any } | null };
+
 export type CreateItemMutationVariables = Exact<{
   input: CreateItemRequest;
 }>;
@@ -269,7 +288,7 @@ export type ItemsQueryVariables = Exact<{
 }>;
 
 
-export type ItemsQuery = { __typename?: 'Query', items: Array<{ __typename?: 'Item', id: string, title: string, description?: string | null, amount: string, status: ItemStatus, createdAt: any, updatedAt: any }> };
+export type ItemsQuery = { __typename?: 'Query', items: Array<{ __typename?: 'ItemsResponse', item: { __typename?: 'Item', id: string, creatorID: string, deletedByUserID?: string | null, title: string, description?: string | null, amount: string, status: ItemStatus, deletedAt?: any | null, createdAt: any, updatedAt: any }, tags: Array<{ __typename?: 'Tag', id: string, name: string }> }> };
 
 export type TagsQueryVariables = Exact<{
   query?: InputMaybe<TagsInput>;
@@ -449,6 +468,33 @@ export const SignInDocument = gql`
       super(apollo);
     }
   }
+export const ItemDocument = gql`
+    query Item($id: ID!) {
+  item(id: $id) {
+    id
+    creatorID
+    title
+    description
+    amount
+    status
+    deletedByUserID
+    deletedAt
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ItemGQL extends Apollo.Query<ItemQuery, ItemQueryVariables> {
+    document = ItemDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
 export const CreateItemDocument = gql`
     mutation CreateItem($input: CreateItemRequest!) {
   createItem(input: $input) {
@@ -499,13 +545,22 @@ export const UsersDocument = gql`
 export const ItemsDocument = gql`
     query Items($query: ItemsRequest) {
   items(query: $query) {
-    id
-    title
-    description
-    amount
-    status
-    createdAt
-    updatedAt
+    item {
+      id
+      creatorID
+      deletedByUserID
+      title
+      description
+      amount
+      status
+      deletedAt
+      createdAt
+      updatedAt
+    }
+    tags {
+      id
+      name
+    }
   }
 }
     `;

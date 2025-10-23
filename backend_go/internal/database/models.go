@@ -16,10 +16,10 @@ import (
 type ItemStatus string
 
 const (
-	ItemStatusNew      ItemStatus = "new"
-	ItemStatusInReview ItemStatus = "in_review"
-	ItemStatusApproved ItemStatus = "approved"
-	ItemStatusRejected ItemStatus = "rejected"
+	ItemStatusNEW      ItemStatus = "NEW"
+	ItemStatusINREVIEW ItemStatus = "IN_REVIEW"
+	ItemStatusAPPROVED ItemStatus = "APPROVED"
+	ItemStatusREJECTED ItemStatus = "REJECTED"
 )
 
 func (e *ItemStatus) Scan(src interface{}) error {

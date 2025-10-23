@@ -10,7 +10,8 @@ INSERT INTO tags (id, name) VALUES
   ('32485a5b-fc94-42c8-996e-a463604d611c', 'performance'),
   ('599d862d-15df-4a70-8150-63e2f63199c7', 'security'),
   ('b7343abd-f790-48e0-920d-85f9627e238e', 'testing'),
-  ('64c44114-5c7a-4044-aee7-aa2814336bd2', 'refactoring')
+  ('64c44114-5c7a-4044-aee7-aa2814336bd2', 'refactoring'),
+  ('e5124bfd-9398-4be4-9461-d69a6ee296b7', 'risky')
   ON CONFLICT DO NOTHING;
 -- +goose StatementEnd
 

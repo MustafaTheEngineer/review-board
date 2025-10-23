@@ -19,7 +19,8 @@ import (
 
 type QueryResolver interface {
 	ValidateToken(ctx context.Context) (*model.TokenValidationResponse, error)
-	Items(ctx context.Context, query *model.ItemsRequest) ([]*database.Item, error)
+	Items(ctx context.Context, query *model.ItemsRequest) ([]*model.ItemsResponse, error)
+	Item(ctx context.Context, id string) (*database.Item, error)
 	Tags(ctx context.Context, query *model.TagsInput) ([]*database.Tag, error)
 	UserConfirmed(ctx context.Context) (bool, error)
 	UserHaveUsername(ctx context.Context) (bool, error)
@@ -50,6 +51,17 @@ func (ec *executionContext) field_Query_isUsernameTaken_args(ctx context.Context
 		return nil, err
 	}
 	args["username"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_item_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -151,13 +163,60 @@ func (ec *executionContext) _Query_items(ctx context.Context, field graphql.Coll
 			return ec.resolvers.Query().Items(ctx, fc.Args["query"].(*model.ItemsRequest))
 		},
 		nil,
-		ec.marshalNItem2ᚕᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItemᚄ,
+		ec.marshalNItemsResponse2ᚕᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐItemsResponseᚄ,
 		true,
 		true,
 	)
 }
 
 func (ec *executionContext) fieldContext_Query_items(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "item":
+				return ec.fieldContext_ItemsResponse_item(ctx, field)
+			case "tags":
+				return ec.fieldContext_ItemsResponse_tags(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ItemsResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_items_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_item(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_item,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Item(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		ec.marshalOItem2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItem,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_item(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -196,7 +255,7 @@ func (ec *executionContext) fieldContext_Query_items(ctx context.Context, field 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_items_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_item_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -721,6 +780,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "item":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_item(ctx, field)
 				return res
 			}
 

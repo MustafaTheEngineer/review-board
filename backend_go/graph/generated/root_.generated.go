@@ -76,6 +76,11 @@ type ComplexityRoot struct {
 		UpdatedAt       func(childComplexity int) int
 	}
 
+	ItemsResponse struct {
+		Item func(childComplexity int) int
+		Tags func(childComplexity int) int
+	}
+
 	Mutation struct {
 		ConfirmUser  func(childComplexity int, input model.ConfirmUserInput) int
 		CreateItem   func(childComplexity int, input model.CreateItemRequest) int
@@ -86,6 +91,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		IsUsernameTaken  func(childComplexity int, username string) int
+		Item             func(childComplexity int, id string) int
 		Items            func(childComplexity int, query *model.ItemsRequest) int
 		Tags             func(childComplexity int, query *model.TagsInput) int
 		UserConfirmed    func(childComplexity int) int
@@ -245,6 +251,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Item.UpdatedAt(childComplexity), true
 
+	case "ItemsResponse.item":
+		if e.complexity.ItemsResponse.Item == nil {
+			break
+		}
+
+		return e.complexity.ItemsResponse.Item(childComplexity), true
+
+	case "ItemsResponse.tags":
+		if e.complexity.ItemsResponse.Tags == nil {
+			break
+		}
+
+		return e.complexity.ItemsResponse.Tags(childComplexity), true
+
 	case "Mutation.confirmUser":
 		if e.complexity.Mutation.ConfirmUser == nil {
 			break
@@ -316,6 +336,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.IsUsernameTaken(childComplexity, args["username"].(string)), true
+
+	case "Query.item":
+		if e.complexity.Query.Item == nil {
+			break
+		}
+
+		args, err := ec.field_Query_item_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Item(childComplexity, args["id"].(string)), true
 
 	case "Query.items":
 		if e.complexity.Query.Items == nil {
@@ -638,7 +670,8 @@ type CreateItemResponse {
 }
 
 extend type Query {
-  items(query: ItemsRequest): [Item!]!
+  items(query: ItemsRequest): [ItemsResponse!]!
+  item(id: ID!): Item
 }
 
 input ItemsRequest {
@@ -649,7 +682,11 @@ input ItemsRequest {
   limit: Int
   offset: Int
 }
-`, BuiltIn: false},
+
+type ItemsResponse {
+  item: Item!
+  tags: [Tag!]!
+}`, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/

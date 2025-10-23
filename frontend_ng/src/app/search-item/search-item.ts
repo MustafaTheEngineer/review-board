@@ -10,8 +10,9 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { TUI_DEFAULT_MATCHER, tuiCountFilledControls, TuiItem } from '@taiga-ui/cdk';
+import { TUI_DEFAULT_MATCHER, tuiCountFilledControls, TuiItem, TuiPlatform } from '@taiga-ui/cdk';
 import {
+  TuiAppearance,
   TuiButton,
   TuiDataList,
   TuiIcon,
@@ -20,9 +21,12 @@ import {
   TuiSelectLike,
   TuiTextfield,
   TuiTextfieldDropdownDirective,
+  TuiTitle,
 } from '@taiga-ui/core';
 import {
+  TuiBadge,
   TuiChevron,
+  TuiChip,
   TuiDataListWrapper,
   TuiFilter,
   TuiFilterByInputPipe,
@@ -34,10 +38,12 @@ import {
   TuiStringifyContentPipe,
   TuiSwitch,
 } from '@taiga-ui/kit';
-import { TuiSearch } from '@taiga-ui/layout';
+import { TuiCardLarge, TuiHeader, TuiSearch } from '@taiga-ui/layout';
 import { catchError, map, of } from 'rxjs';
 import {
+  Item,
   ItemsGQL,
+  ItemsResponse,
   ItemStatus,
   Tag,
   TagsGQL,
@@ -48,6 +54,8 @@ import {
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { TuiAmountPipe } from '@taiga-ui/addon-commerce';
 import { gql } from 'apollo-angular';
+import { RouterLink } from '@angular/router';
+import { ItemService } from '../item-service';
 
 @Component({
   selector: 'app-search-item',
@@ -77,7 +85,14 @@ import { gql } from 'apollo-angular';
     TuiTextfieldDropdownDirective,
     TuiHideSelectedPipe,
     TuiStringifyContentPipe,
-    KeyValuePipe,
+    TuiAppearance,
+    TuiBadge,
+    TuiCardLarge,
+    TuiHeader,
+    TuiPlatform,
+    TuiTitle,
+    TuiChip,
+    RouterLink,
   ],
   templateUrl: './search-item.html',
   styleUrl: './search-item.less',
@@ -87,6 +102,7 @@ export class SearchItem {
   usersGQL = inject(UsersGQL);
   tagsGQL = inject(TagsGQL);
   itemsGQL = inject(ItemsGQL);
+  itemService = inject(ItemService);
 
   constructor() {
     this.usersGQL
@@ -119,6 +135,23 @@ export class SearchItem {
         if (!(response instanceof Error)) {
           if (response.data?.tags) {
             this.tags.set(response.data.tags);
+          }
+        }
+      });
+
+    this.itemsGQL
+      .fetch({
+        fetchPolicy: 'network-only',
+      })
+      .pipe(
+        catchError((error) => {
+          return of(new Error(error.message));
+        }),
+      )
+      .subscribe((result) => {
+        if (!(result instanceof Error)) {
+          if (result.data?.items) {
+            this.items.set(result.data.items);
           }
         }
       });
@@ -204,8 +237,10 @@ export class SearchItem {
     status.replaceAll('_', ' '),
   );
 
-  itemStatuses = Object.values(ItemStatus);
-  statusesStringify = (status: ItemStatus): string => Object.values(status)[0].replaceAll('_', ' ');
+  protected readonly count = toSignal(
+    this.form.valueChanges.pipe(map(() => tuiCountFilledControls(this.form))),
+    { initialValue: 0 },
+  );
 
   onSubmit() {
     const { itemName, selectedUsers, selectedTags, itemStatus } = this.form.value;
@@ -228,14 +263,15 @@ export class SearchItem {
         }),
       )
       .subscribe((result) => {
-        console.log(result);
+        if (!(result instanceof Error)) {
+          if (result.data?.items) {
+            this.items.set(result.data.items);
+          }
+        }
       });
   }
 
-  protected readonly count = toSignal(
-    this.form.valueChanges.pipe(map(() => tuiCountFilledControls(this.form))),
-    { initialValue: 0 },
-  );
+  items = signal<ItemsResponse[]>([]);
 }
 
 type UserPartial = Pick<User, 'id' | 'username' | 'email'>;
@@ -253,13 +289,22 @@ const USERS = gql`
 const ITEMS = gql`
   query Items($query: ItemsRequest) {
     items(query: $query) {
-      id
-      title
-      description
-      amount
-      status
-      createdAt
-      updatedAt
+      item {
+        id
+        creatorID
+        deletedByUserID
+        title
+        description
+        amount
+        status
+        deletedAt
+        createdAt
+        updatedAt
+      }
+      tags {
+        id
+        name
+      }
     }
   }
 `;

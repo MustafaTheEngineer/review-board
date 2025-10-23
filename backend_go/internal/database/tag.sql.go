@@ -36,6 +36,41 @@ func (q *Queries) InsertTag(ctx context.Context, arg InsertTagParams) (Tag, erro
 	return i, err
 }
 
+const selectItemTags = `-- name: SelectItemTags :many
+SELECT t.id, t.name
+FROM tags t
+INNER JOIN item_tags it ON t.id = it.tag_id
+WHERE it.item_id = $1
+`
+
+type SelectItemTagsRow struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+func (q *Queries) SelectItemTags(ctx context.Context, itemID uuid.UUID) ([]SelectItemTagsRow, error) {
+	rows, err := q.db.QueryContext(ctx, selectItemTags, itemID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SelectItemTagsRow
+	for rows.Next() {
+		var i SelectItemTagsRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const selectTagByName = `-- name: SelectTagByName :one
 SELECT id, created_by_user_id, name, created_at, updated_at FROM tags WHERE name = $1
 `

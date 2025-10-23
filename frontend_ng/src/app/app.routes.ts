@@ -5,6 +5,7 @@ import { ConfirmAccount } from './confirm-account/confirm-account';
 import { ChooseUsername } from './choose-username/choose-username';
 import { ManageItem } from './manage-item/manage-item';
 import { SearchItem } from './search-item/search-item';
+import { ItemDetails } from './item-details/item-details';
 
 export const routes: Routes = [
   { path: 'entry', component: Entry },
@@ -29,6 +30,10 @@ export const routes: Routes = [
                 component: ManageItem,
               },
             ],
+          },
+          {
+            path: ':id',
+            component: ItemDetails,
           },
           {
             path: '',

@@ -169,7 +169,7 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 }
 
 // Items is the resolver for the items field.
-func (r *queryResolver) Items(ctx context.Context, query *model.ItemsRequest) ([]*database.Item, error) {
+func (r *queryResolver) Items(ctx context.Context, query *model.ItemsRequest) ([]*model.ItemsResponse, error) {
 	queryTags := goqu.Select("*").From("items")
 	expressions := make([]exp.Expression, 0)
 
@@ -204,19 +204,30 @@ func (r *queryResolver) Items(ctx context.Context, query *model.ItemsRequest) ([
 		}
 	}
 
-	var items []*database.Item
 	querySQL, _, err := queryTags.ToSQL()
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while fetching items", http.StatusInternalServerError)
 		return nil, nil
 	}
 
-	dbItems, err := dbConfig.DbCfg.SqlDb.Query(querySQL)
+	tx, err := dbConfig.DbCfg.SqlDb.Begin()
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while starting transaction", http.StatusInternalServerError)
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	qtx := dbConfig.DbCfg.Queries.WithTx(tx)
+
+	dbItems, err := tx.Query(querySQL)
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while fetching items", http.StatusInternalServerError)
 		return nil, nil
 	}
-	defer dbItems.Close()
+
+	var items []*model.ItemsResponse
+
 	for dbItems.Next() {
 		var item database.Item
 		err := dbItems.Scan(
@@ -235,10 +246,49 @@ func (r *queryResolver) Items(ctx context.Context, query *model.ItemsRequest) ([
 			helpers.CreateGraphQLError(ctx, "Error while scanning item", http.StatusInternalServerError)
 			return nil, nil
 		}
-		items = append(items, &item)
+
+		items = append(items, &model.ItemsResponse{
+			Item: &item,
+		})
+	}
+	dbItems.Close()
+
+	for _, item := range items {
+		var tags []*database.Tag
+		dbTags, err := qtx.SelectItemTags(ctx, item.Item.ID)
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+			return nil, nil
+		}
+
+		for _, dbTag := range dbTags {
+			tags = append(tags, &database.Tag{
+				ID:   dbTag.ID,
+				Name: dbTag.Name,
+			})
+		}
+
+		item.Tags = tags
 	}
 
-	return items, nil
+	return items, tx.Commit()
+}
+
+// Item is the resolver for the item field.
+func (r *queryResolver) Item(ctx context.Context, id string) (*database.Item, error) {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Invalid item ID", http.StatusBadRequest)
+		return nil, nil
+	}
+
+	dbItem, err := dbConfig.DbCfg.Queries.ItemById(ctx, uid)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while fetching item", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	return &dbItem, nil
 }
 
 // Item returns graph.ItemResolver implementation.
