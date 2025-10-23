@@ -234,6 +234,8 @@ func (ec *executionContext) fieldContext_Query_item(ctx context.Context, field g
 				return ec.fieldContext_Item_description(ctx, field)
 			case "amount":
 				return ec.fieldContext_Item_amount(ctx, field)
+			case "riskScore":
+				return ec.fieldContext_Item_riskScore(ctx, field)
 			case "status":
 				return ec.fieldContext_Item_status(ctx, field)
 			case "deletedByUserID":

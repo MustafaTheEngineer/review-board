@@ -15,7 +15,7 @@ import (
 const insertItem = `-- name: InsertItem :one
 INSERT INTO items (id, creator_id, title, description, amount, status)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, creator_id, title, description, amount, status, deleted_by_user_id, deleted_at, created_at, updated_at
+RETURNING id, creator_id, title, description, amount, risk_score, status, deleted_by_user_id, deleted_at, created_at, updated_at
 `
 
 type InsertItemParams struct {
@@ -43,6 +43,7 @@ func (q *Queries) InsertItem(ctx context.Context, arg InsertItemParams) (Item, e
 		&i.Title,
 		&i.Description,
 		&i.Amount,
+		&i.RiskScore,
 		&i.Status,
 		&i.DeletedByUserID,
 		&i.DeletedAt,
@@ -53,7 +54,7 @@ func (q *Queries) InsertItem(ctx context.Context, arg InsertItemParams) (Item, e
 }
 
 const itemById = `-- name: ItemById :one
-SELECT id, creator_id, title, description, amount, status, deleted_by_user_id, deleted_at, created_at, updated_at FROM items WHERE id = $1
+SELECT id, creator_id, title, description, amount, risk_score, status, deleted_by_user_id, deleted_at, created_at, updated_at FROM items WHERE id = $1
 `
 
 func (q *Queries) ItemById(ctx context.Context, id uuid.UUID) (Item, error) {
@@ -65,6 +66,7 @@ func (q *Queries) ItemById(ctx context.Context, id uuid.UUID) (Item, error) {
 		&i.Title,
 		&i.Description,
 		&i.Amount,
+		&i.RiskScore,
 		&i.Status,
 		&i.DeletedByUserID,
 		&i.DeletedAt,
@@ -75,7 +77,7 @@ func (q *Queries) ItemById(ctx context.Context, id uuid.UUID) (Item, error) {
 }
 
 const selectUserItem = `-- name: SelectUserItem :one
-SELECT id, creator_id, title, description, amount, status, deleted_by_user_id, deleted_at, created_at, updated_at FROM items WHERE creator_id = $1 AND  title = $2
+SELECT id, creator_id, title, description, amount, risk_score, status, deleted_by_user_id, deleted_at, created_at, updated_at FROM items WHERE creator_id = $1 AND  title = $2
 `
 
 type SelectUserItemParams struct {
@@ -92,6 +94,7 @@ func (q *Queries) SelectUserItem(ctx context.Context, arg SelectUserItemParams) 
 		&i.Title,
 		&i.Description,
 		&i.Amount,
+		&i.RiskScore,
 		&i.Status,
 		&i.DeletedByUserID,
 		&i.DeletedAt,
@@ -105,7 +108,7 @@ const updateItemStatus = `-- name: UpdateItemStatus :one
 UPDATE items
 SET status = $1
 WHERE id = $2
-RETURNING id, creator_id, title, description, amount, status, deleted_by_user_id, deleted_at, created_at, updated_at
+RETURNING id, creator_id, title, description, amount, risk_score, status, deleted_by_user_id, deleted_at, created_at, updated_at
 `
 
 type UpdateItemStatusParams struct {
@@ -122,6 +125,7 @@ func (q *Queries) UpdateItemStatus(ctx context.Context, arg UpdateItemStatusPara
 		&i.Title,
 		&i.Description,
 		&i.Amount,
+		&i.RiskScore,
 		&i.Status,
 		&i.DeletedByUserID,
 		&i.DeletedAt,

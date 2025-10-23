@@ -12,13 +12,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TUI_DEFAULT_MATCHER, tuiCountFilledControls, TuiItem, TuiPlatform } from '@taiga-ui/cdk';
 import {
+  TuiAccessor,
   TuiAppearance,
   TuiButton,
   TuiDataList,
-  TuiIcon,
-  TuiLink,
-  TuiScrollable,
-  TuiSelectLike,
   TuiTextfield,
   TuiTextfieldDropdownDirective,
   TuiTitle,
@@ -30,16 +27,13 @@ import {
   TuiDataListWrapper,
   TuiFilter,
   TuiFilterByInputPipe,
-  TuiHideSelectedPipe,
   TuiInputChip,
   TuiMultiSelect,
-  TuiSegmented,
   TuiSelect,
   TuiStringifyContentPipe,
-  TuiSwitch,
 } from '@taiga-ui/kit';
 import { TuiCardLarge, TuiHeader, TuiSearch } from '@taiga-ui/layout';
-import { catchError, map, of } from 'rxjs';
+import { catchError, map, of, switchMap, tap } from 'rxjs';
 import {
   Item,
   ItemsGQL,
@@ -56,6 +50,7 @@ import { TuiAmountPipe } from '@taiga-ui/addon-commerce';
 import { gql } from 'apollo-angular';
 import { RouterLink } from '@angular/router';
 import { ItemService } from '../item-service';
+import { TuiArcChart, TuiRingChart } from '@taiga-ui/addon-charts';
 
 @Component({
   selector: 'app-search-item',
@@ -65,34 +60,24 @@ import { ItemService } from '../item-service';
     TuiChevron,
     TuiDataListWrapper,
     TuiFilter,
-    TuiLink,
-    TuiIcon,
     ScrollingModule,
     TuiDataList,
-    TuiScrollable,
     TuiSearch,
-    TuiSegmented,
-    TuiSwitch,
     TuiTextfield,
     TuiSelect,
     TuiMultiSelect,
-    TuiAmountPipe,
-    AsyncPipe,
     TuiFilterByInputPipe,
     TuiInputChip,
-    TuiSelectLike,
-    TuiItem,
     TuiTextfieldDropdownDirective,
-    TuiHideSelectedPipe,
     TuiStringifyContentPipe,
     TuiAppearance,
-    TuiBadge,
     TuiCardLarge,
     TuiHeader,
-    TuiPlatform,
     TuiTitle,
     TuiChip,
     RouterLink,
+    TuiRingChart,
+    TuiBadge,
   ],
   templateUrl: './search-item.html',
   styleUrl: './search-item.less',
@@ -103,6 +88,60 @@ export class SearchItem {
   tagsGQL = inject(TagsGQL);
   itemsGQL = inject(ItemsGQL);
   itemService = inject(ItemService);
+
+  usersMap = signal(new Map<string, UserPartial>());
+  fetchItems$ = this.itemsGQL.fetch({
+    fetchPolicy: 'network-only',
+  });
+  fetchItemsWithUsers$ = this.fetchItems$.pipe(
+    catchError((error) => {
+      return of(new Error(error.message));
+    }),
+    switchMap((response) => {
+      if (response instanceof Error) {
+        return of(response);
+      }
+
+      if (!response.data?.items) {
+        return of(response);
+      }
+
+      this.items.set(response.data.items);
+
+      const userEmails: string[] = [];
+      response.data.items.forEach((item) => {
+        if (!this.usersMap().get(item.item.creatorID)) {
+          userEmails.push(item.item.creatorID);
+        }
+      });
+
+      return this.usersGQL
+        .fetch({
+          fetchPolicy: 'network-only',
+          variables: {
+            query: {
+              ids: userEmails,
+            },
+          },
+        })
+        .pipe(
+          catchError((error) => {
+            return of(new Error(error.message));
+          }),
+          tap((response) => {
+            if (!(response instanceof Error)) {
+              if (response.data?.users) {
+                console.log(response.data?.users);
+                response.data.users.forEach((user) => {
+                  this.usersMap().set(user.id, user);
+                });
+                this.usersMap.update((usersMap) => new Map(usersMap));
+              }
+            }
+          }),
+        );
+    }),
+  );
 
   constructor() {
     this.usersGQL
@@ -139,22 +178,7 @@ export class SearchItem {
         }
       });
 
-    this.itemsGQL
-      .fetch({
-        fetchPolicy: 'network-only',
-      })
-      .pipe(
-        catchError((error) => {
-          return of(new Error(error.message));
-        }),
-      )
-      .subscribe((result) => {
-        if (!(result instanceof Error)) {
-          if (result.data?.items) {
-            this.items.set(result.data.items);
-          }
-        }
-      });
+    this.fetchItemsWithUsers$.subscribe();
   }
 
   protected readonly form = new FormGroup({
@@ -199,6 +223,10 @@ export class SearchItem {
         if (!(response instanceof Error)) {
           if (response.data?.users) {
             this.users.set(response.data.users);
+            response.data.users.forEach((user) => {
+              this.usersMap().set(user.id, user);
+            });
+            this.usersMap.update((usersMap) => new Map(usersMap));
           }
         }
       });
@@ -261,14 +289,52 @@ export class SearchItem {
         catchError((error) => {
           return of(new Error(error.message));
         }),
-      )
-      .subscribe((result) => {
-        if (!(result instanceof Error)) {
-          if (result.data?.items) {
-            this.items.set(result.data.items);
+        switchMap((response) => {
+          if (response instanceof Error) {
+            return of(response);
           }
-        }
-      });
+
+          if (!response.data?.items) {
+            return of(response);
+          }
+
+          this.items.set(response.data.items);
+
+          const userEmails: string[] = [];
+          response.data.items.forEach((item) => {
+            if (!this.usersMap().get(item.item.creatorID)) {
+              userEmails.push(item.item.creatorID);
+            }
+          });
+
+          return this.usersGQL
+            .fetch({
+              fetchPolicy: 'network-only',
+              variables: {
+                query: {
+                  ids: userEmails,
+                },
+              },
+            })
+            .pipe(
+              catchError((error) => {
+                return of(new Error(error.message));
+              }),
+              tap((response) => {
+                if (!(response instanceof Error)) {
+                  if (response.data?.users) {
+                    console.log(response.data?.users);
+                    response.data.users.forEach((user) => {
+                      this.usersMap().set(user.id, user);
+                    });
+                    this.usersMap.update((usersMap) => new Map(usersMap));
+                  }
+                }
+              }),
+            );
+        }),
+      )
+      .subscribe();
   }
 
   items = signal<ItemsResponse[]>([]);
@@ -296,6 +362,7 @@ const ITEMS = gql`
         title
         description
         amount
+        riskScore
         status
         deletedAt
         createdAt

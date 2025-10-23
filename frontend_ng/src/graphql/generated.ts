@@ -52,6 +52,7 @@ export type Item = {
   deletedByUserID?: Maybe<Scalars['ID']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  riskScore: Scalars['Int']['output'];
   status: ItemStatus;
   title: Scalars['String']['output'];
   updatedAt: Scalars['Date']['output'];
@@ -219,6 +220,7 @@ export type User = {
 
 export type UsersInput = {
   emailLike?: InputMaybe<Scalars['String']['input']>;
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   usernameLike?: InputMaybe<Scalars['String']['input']>;
@@ -279,7 +281,7 @@ export type ItemQueryVariables = Exact<{
 }>;
 
 
-export type ItemQuery = { __typename?: 'Query', item?: { __typename?: 'Item', id: string, creatorID: string, title: string, description?: string | null, amount: string, status: ItemStatus, deletedByUserID?: string | null, deletedAt?: any | null, createdAt: any, updatedAt: any } | null };
+export type ItemQuery = { __typename?: 'Query', item?: { __typename?: 'Item', id: string, creatorID: string, title: string, description?: string | null, amount: string, riskScore: number, status: ItemStatus, deletedByUserID?: string | null, deletedAt?: any | null, createdAt: any, updatedAt: any } | null };
 
 export type UpdateItemStatusMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -308,7 +310,7 @@ export type ItemsQueryVariables = Exact<{
 }>;
 
 
-export type ItemsQuery = { __typename?: 'Query', items: Array<{ __typename?: 'ItemsResponse', item: { __typename?: 'Item', id: string, creatorID: string, deletedByUserID?: string | null, title: string, description?: string | null, amount: string, status: ItemStatus, deletedAt?: any | null, createdAt: any, updatedAt: any }, tags: Array<{ __typename?: 'Tag', id: string, name: string }> }> };
+export type ItemsQuery = { __typename?: 'Query', items: Array<{ __typename?: 'ItemsResponse', item: { __typename?: 'Item', id: string, creatorID: string, deletedByUserID?: string | null, title: string, description?: string | null, amount: string, riskScore: number, status: ItemStatus, deletedAt?: any | null, createdAt: any, updatedAt: any }, tags: Array<{ __typename?: 'Tag', id: string, name: string }> }> };
 
 export type TagsQueryVariables = Exact<{
   query?: InputMaybe<TagsInput>;
@@ -496,6 +498,7 @@ export const ItemDocument = gql`
     title
     description
     amount
+    riskScore
     status
     deletedByUserID
     deletedAt
@@ -599,6 +602,7 @@ export const ItemsDocument = gql`
       title
       description
       amount
+      riskScore
       status
       deletedAt
       createdAt

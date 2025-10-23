@@ -83,8 +83,9 @@ type TokenValidationResponse struct {
 }
 
 type UsersInput struct {
-	Limit        *int32  `json:"limit,omitempty"`
-	Offset       *int32  `json:"offset,omitempty"`
-	UsernameLike *string `json:"usernameLike,omitempty"`
-	EmailLike    *string `json:"emailLike,omitempty"`
+	Limit        *int32   `json:"limit,omitempty"`
+	Offset       *int32   `json:"offset,omitempty"`
+	UsernameLike *string  `json:"usernameLike,omitempty"`
+	EmailLike    *string  `json:"emailLike,omitempty"`
+	Ids          []string `json:"ids,omitempty"`
 }

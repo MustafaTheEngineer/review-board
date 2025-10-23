@@ -73,6 +73,7 @@ type ComplexityRoot struct {
 		DeletedByUserID func(childComplexity int) int
 		Description     func(childComplexity int) int
 		ID              func(childComplexity int) int
+		RiskScore       func(childComplexity int) int
 		Status          func(childComplexity int) int
 		Title           func(childComplexity int) int
 		UpdatedAt       func(childComplexity int) int
@@ -232,6 +233,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Item.ID(childComplexity), true
+
+	case "Item.riskScore":
+		if e.complexity.Item.RiskScore == nil {
+			break
+		}
+
+		return e.complexity.Item.RiskScore(childComplexity), true
 
 	case "Item.status":
 		if e.complexity.Item.Status == nil {
@@ -656,6 +664,7 @@ type Item {
   title: String!
   description: String
   amount: String!
+  riskScore: Int!
   status: ItemStatus!
   deletedByUserID: ID
   deletedAt: Date
@@ -826,6 +835,7 @@ input UsersInput {
   offset: Int
   usernameLike: String
   emailLike: String
+  ids: [ID!]
 }
 `, BuiltIn: false},
 }

@@ -105,6 +105,7 @@ type Item struct {
 	Title           string         `json:"title"`
 	Description     sql.NullString `json:"description"`
 	Amount          string         `json:"amount"`
+	RiskScore       int32          `json:"riskScore"`
 	Status          ItemStatus     `json:"status"`
 	DeletedByUserID uuid.NullUUID  `json:"deletedByUserId"`
 	DeletedAt       sql.NullTime   `json:"deletedAt"`

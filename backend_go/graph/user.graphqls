@@ -79,4 +79,5 @@ input UsersInput {
   offset: Int
   usernameLike: String
   emailLike: String
+  ids: [ID!]
 }

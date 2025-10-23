@@ -272,6 +272,9 @@ func (r *queryResolver) Users(ctx context.Context, query *model.UsersInput) ([]*
 		if query.EmailLike != nil {
 			expressions = append(expressions, goqu.C("email").ILike("%"+*query.EmailLike+"%"))
 		}
+		if len(query.Ids) > 0 {
+			expressions = append(expressions, goqu.C("id").In(query.Ids))
+		}
 
 		if len(expressions) > 0 {
 			queryTags = queryTags.Where(goqu.Or(expressions...))
@@ -305,8 +308,8 @@ func (r *queryResolver) Users(ctx context.Context, query *model.UsersInput) ([]*
 		var user database.User
 		err := dbUsers.Scan(
 			&user.ID,
-			&user.Username,
 			&user.Email,
+			&user.Username,
 		)
 		if err != nil {
 			helpers.CreateGraphQLError(ctx, "Error while scanning tag", http.StatusInternalServerError)

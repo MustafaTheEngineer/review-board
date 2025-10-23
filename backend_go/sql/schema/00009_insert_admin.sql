@@ -24,5 +24,5 @@ INSERT INTO users (id, email, username, provider, password_hash, confirmed, role
 
 -- +goose Down
 -- +goose StatementBegin
-DELETE FROM users WHERE id = 'a452b60a-df84-48d4-95ad-2542b8ed10aa';
+DELETE FROM users WHERE id IN ('a452b60a-df84-48d4-95ad-2542b8ed10aa','617d6126-efb6-454a-bdf2-a1b512e19569');
 -- +goose StatementEnd

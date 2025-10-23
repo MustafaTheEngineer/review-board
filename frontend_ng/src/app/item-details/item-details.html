@@ -14,6 +14,16 @@
       {{ item.description }}
     </section>
 
+    <div class="wrapper">
+      <tui-ring-chart
+        size="m"
+        class="tui-space_right-4"
+        [value]="[100 - item.riskScore, item.riskScore]"
+      >
+        <span>{{ item.riskScore }}% Risk</span>
+      </tui-ring-chart>
+    </div>
+
     @if (appService.user.role === Role.Admin) {
       <section [tuiAppearance]="itemService.itemStatusColor(itemStatus())" id="item-status-section">
         <tui-textfield tuiChevron [tuiTextfieldCleaner]="false">

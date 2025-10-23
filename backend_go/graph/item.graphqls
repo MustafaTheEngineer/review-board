@@ -16,6 +16,7 @@ type Item {
   title: String!
   description: String
   amount: String!
+  riskScore: Int!
   status: ItemStatus!
   deletedByUserID: ID
   deletedAt: Date

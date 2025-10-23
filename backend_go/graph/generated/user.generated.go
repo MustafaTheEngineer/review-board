@@ -619,6 +619,8 @@ func (ec *executionContext) fieldContext_Mutation_updateItemStatus(ctx context.C
 				return ec.fieldContext_Item_description(ctx, field)
 			case "amount":
 				return ec.fieldContext_Item_amount(ctx, field)
+			case "riskScore":
+				return ec.fieldContext_Item_riskScore(ctx, field)
 			case "status":
 				return ec.fieldContext_Item_status(ctx, field)
 			case "deletedByUserID":
@@ -1143,7 +1145,7 @@ func (ec *executionContext) unmarshalInputUsersInput(ctx context.Context, obj an
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"limit", "offset", "usernameLike", "emailLike"}
+	fieldsInOrder := [...]string{"limit", "offset", "usernameLike", "emailLike", "ids"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -1178,6 +1180,13 @@ func (ec *executionContext) unmarshalInputUsersInput(ctx context.Context, obj an
 				return it, err
 			}
 			it.EmailLike = data
+		case "ids":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Ids = data
 		}
 	}
 

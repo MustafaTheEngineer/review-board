@@ -76,6 +76,8 @@ func (ec *executionContext) fieldContext_CreateItemResponse_item(_ context.Conte
 				return ec.fieldContext_Item_description(ctx, field)
 			case "amount":
 				return ec.fieldContext_Item_amount(ctx, field)
+			case "riskScore":
+				return ec.fieldContext_Item_riskScore(ctx, field)
 			case "status":
 				return ec.fieldContext_Item_status(ctx, field)
 			case "deletedByUserID":
@@ -267,6 +269,35 @@ func (ec *executionContext) fieldContext_Item_amount(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Item_riskScore(ctx context.Context, field graphql.CollectedField, obj *database.Item) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Item_riskScore,
+		func(ctx context.Context) (any, error) {
+			return obj.RiskScore, nil
+		},
+		nil,
+		ec.marshalNInt2int32,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Item_riskScore(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Item",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Item_status(ctx context.Context, field graphql.CollectedField, obj *database.Item) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -446,6 +477,8 @@ func (ec *executionContext) fieldContext_ItemsResponse_item(_ context.Context, f
 				return ec.fieldContext_Item_description(ctx, field)
 			case "amount":
 				return ec.fieldContext_Item_amount(ctx, field)
+			case "riskScore":
+				return ec.fieldContext_Item_riskScore(ctx, field)
 			case "status":
 				return ec.fieldContext_Item_status(ctx, field)
 			case "deletedByUserID":
@@ -787,6 +820,11 @@ func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "amount":
 			out.Values[i] = ec._Item_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "riskScore":
+			out.Values[i] = ec._Item_riskScore(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

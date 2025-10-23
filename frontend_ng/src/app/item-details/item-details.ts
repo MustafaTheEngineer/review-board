@@ -26,6 +26,7 @@ import { FormsModule } from '@angular/forms';
 import { ItemService } from '../item-service';
 import { AppService } from '../app-service';
 import { ErrorService } from '../error-service';
+import { TuiRingChart } from '@taiga-ui/addon-charts';
 
 @Component({
   selector: 'app-item-details',
@@ -45,6 +46,7 @@ import { ErrorService } from '../error-service';
     TuiComboBox,
     TuiChip,
     TuiStringifyContentPipe,
+    TuiRingChart,
   ],
   templateUrl: './item-details.html',
   styleUrl: './item-details.less',
@@ -149,6 +151,7 @@ const ITEM = gql`
       title
       description
       amount
+      riskScore
       status
       deletedByUserID
       deletedAt

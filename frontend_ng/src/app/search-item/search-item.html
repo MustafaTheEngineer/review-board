@@ -106,11 +106,22 @@
           <section>
             {{ item.item.description }}
           </section>
+
           <section class="tags">
             @for (tag of item.tags; track $index) {
               <tui-chip appearance="outline">#{{ tag.name }}</tui-chip>
             }
           </section>
+
+          <div class="wrapper">
+            <tui-ring-chart
+              size="m"
+              class="tui-space_right-4"
+              [value]="[100 - item.item.riskScore, item.item.riskScore]"
+            >
+              <span>{{ item.item.riskScore }}% Risk</span>
+            </tui-ring-chart>
+          </div>
 
           <footer>
             <button
@@ -122,6 +133,12 @@
             >
               Details
             </button>
+
+            @if (usersMap().get(item.item.creatorID); as user) {
+              <tui-chip size="m" [style.border-radius.rem]="5">
+                {{ user.email }} - {{ user.username }}
+              </tui-chip>
+            }
           </footer>
         </div>
       }
