@@ -20,13 +20,13 @@ import (
 func (r *queryResolver) Tags(ctx context.Context, query *model.TagsInput) ([]*database.Tag, error) {
 	queryTags := goqu.Select("*").From("tags")
 	if query == nil {
-		queryTags = queryTags.Limit(10)
+		queryTags = queryTags.Limit(100)
 	} else {
 		if query.Like != nil {
 			queryTags = queryTags.Where(goqu.C("name").Like("%" + *query.Like + "%"))
 		}
 		if query.Limit == nil {
-			queryTags = queryTags.Limit(10)
+			queryTags = queryTags.Limit(100)
 		} else {
 			queryTags = queryTags.Limit(uint(*query.Limit))
 		}

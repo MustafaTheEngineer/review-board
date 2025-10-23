@@ -1,4 +1,4 @@
-import { AsyncPipe, NgForOf } from '@angular/common';
+import { AsyncPipe, KeyValuePipe, NgForOf } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -36,7 +36,7 @@ import {
 } from '@taiga-ui/kit';
 import { TuiSearch } from '@taiga-ui/layout';
 import { catchError, map, of } from 'rxjs';
-import { ItemStatus, User, UsersGQL, UsersQuery } from '../../graphql/generated';
+import { ItemStatus, Tag, TagsGQL, User, UsersGQL, UsersQuery } from '../../graphql/generated';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { TuiAmountPipe } from '@taiga-ui/addon-commerce';
 import { gql } from 'apollo-angular';
@@ -69,6 +69,7 @@ import { gql } from 'apollo-angular';
     TuiTextfieldDropdownDirective,
     TuiHideSelectedPipe,
     TuiStringifyContentPipe,
+    KeyValuePipe,
   ],
   templateUrl: './search-item.html',
   styleUrl: './search-item.less',
@@ -76,6 +77,7 @@ import { gql } from 'apollo-angular';
 })
 export class SearchItem {
   usersGQL = inject(UsersGQL);
+  tagsGQL = inject(TagsGQL);
 
   constructor() {
     this.usersGQL
@@ -94,6 +96,23 @@ export class SearchItem {
           }
         }
       });
+
+    this.tagsGQL
+      .fetch({
+        fetchPolicy: 'network-only',
+      })
+      .pipe(
+        catchError((error) => {
+          return of(new Error(error.message));
+        }),
+      )
+      .subscribe((response) => {
+        if (!(response instanceof Error)) {
+          if (response.data?.tags) {
+            this.tags.set(response.data.tags);
+          }
+        }
+      });
   }
 
   protected readonly form = new FormGroup({
@@ -106,8 +125,10 @@ export class SearchItem {
     >([], {
       nonNullable: true,
     }),
+    selectedTags: new FormControl<Tag[]>([], {
+      nonNullable: true,
+    }),
     itemStatus: new FormControl<ItemStatus[]>([]),
-    onlyMyItems: new FormControl(false),
   });
 
   protected readonly users = signal<
@@ -116,24 +137,12 @@ export class SearchItem {
       email: string;
     }>
   >([]);
-
   protected readonly userspreventArbitrary = (user: {
     username?: string | null;
     email: string;
   }): boolean => this.users().find((arrUser) => arrUser.email === user.email) === undefined;
-
   protected readonly userStringify = (user: { username?: string | null; email: string }): string =>
     `${user.email} - ${user.username}`;
-
-  protected readonly statusFilters = Object.values(ItemStatus).map((status) =>
-    status.replaceAll('_', ' '),
-  );
-
-  protected readonly count = toSignal(
-    this.form.valueChanges.pipe(map(() => tuiCountFilledControls(this.form))),
-    { initialValue: 0 },
-  );
-  ItemStatus = ItemStatus;
 
   queryUsers(event: Event) {
     console.log(this.form.controls.selectedUsers.value);
@@ -161,6 +170,52 @@ export class SearchItem {
         }
       });
   }
+
+  protected readonly tags = signal<Tag[]>([]);
+  protected readonly tagspreventArbitrary = (tag: Tag): boolean =>
+    this.tags().find((arrTag) => arrTag.id === tag.id) === undefined;
+  protected readonly tagStringify = (tag: Tag): string => tag.name;
+  queryTags(event: Event) {
+    console.log(this.form.controls.selectedTags.value);
+    const value = (event.currentTarget as HTMLInputElement).value;
+    this.tagsGQL
+      .fetch({
+        fetchPolicy: 'network-only',
+        variables: {
+          query: {
+            like: value,
+          },
+        },
+      })
+      .pipe(
+        catchError((error) => {
+          return of(new Error(error.message));
+        }),
+      )
+      .subscribe((response) => {
+        if (!(response instanceof Error)) {
+          if (response.data?.tags) {
+            this.tags.set(response.data.tags);
+          }
+        }
+      });
+  }
+
+  protected readonly statusFilters = Object.values(ItemStatus).map((status) =>
+    status.replaceAll('_', ' '),
+  );
+
+  itemStatuses = Object.values(ItemStatus);
+  statusesStringify = (status: ItemStatus): string => Object.values(status)[0].replaceAll('_', ' ');
+
+  onSubmit() {
+    console.log(this.form.value);
+  }
+
+  protected readonly count = toSignal(
+    this.form.valueChanges.pipe(map(() => tuiCountFilledControls(this.form))),
+    { initialValue: 0 },
+  );
 }
 
 const USERS = gql`

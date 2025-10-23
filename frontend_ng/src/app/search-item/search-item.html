@@ -1,5 +1,5 @@
 <search tuiSearch>
-  <form [formGroup]="form">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <fieldset tuiTextfieldSize="s">
       <tui-textfield iconStart="@tui.search">
         <input formControlName="itemName" placeholder="Item Name" tuiTextfield />
@@ -18,11 +18,10 @@
           tuiInputChip
           placeholder="Filter by User"
           formControlName="selectedUsers"
-          #userFilterInput
           (input)="queryUsers($event)"
         />
 
-        @if (users() | tuiHideSelected| tuiFilterByInput; as items) {
+        @if (users() | tuiFilterByInput; as items) {
           <ng-template tuiTextfieldDropdown>
             <tui-data-list-wrapper
               new
@@ -34,16 +33,46 @@
         }
       </tui-textfield>
 
-      <button size="s" tuiButton type="button">Search</button>
+      <button size="s" tuiButton type="submit">Search</button>
     </fieldset>
 
-    <fieldset>
-      <tui-filter formControlName="itemStatus" size="s" [items]="statusFilters" />
+    <fieldset  tuiTextfieldSize="s">
+      <tui-textfield
+        iconStart="@tui.tag"
+        multi
+        tuiChevron
+        [tuiTextfieldCleaner]="false"
+        [stringify]="tagStringify"
+        [disabledItemHandler]="tagspreventArbitrary"
+        [rows]="2"
+      >
+        <input
+          tuiInputChip
+          placeholder="Filter by Tag"
+          formControlName="selectedTags"
+          (input)="queryTags($event)"
+        />
+
+        @if (tags() | tuiFilterByInput; as tags) {
+          <ng-template tuiTextfieldDropdown>
+            <tui-data-list-wrapper
+              new
+              tuiMultiSelectGroup
+              [items]="tags"
+              [itemContent]="tagStringify | tuiStringifyContent"
+            />
+          </ng-template>
+        }
+      </tui-textfield>
+    </fieldset>
+
+    <fieldset  tuiTextfieldSize="s">
+      <tui-filter formControlName="itemStatus" size="s" [items]="itemStatuses" [content]="statusesStringify" />
       <hr />
       <button
         appearance="flat"
         iconStart="@tui.rotate-cw"
-        size="xs"
+        size="m"
         tuiButton
         type="reset"
         [disabled]="!count()"
