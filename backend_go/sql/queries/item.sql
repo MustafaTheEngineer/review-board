@@ -8,3 +8,9 @@ SELECT * FROM items WHERE creator_id = $1 AND  title = $2;
 
 -- name: ItemById :one
 SELECT * FROM items WHERE id = $1;
+
+-- name: UpdateItemStatus :one
+UPDATE items
+SET status = $1
+WHERE id = $2
+RETURNING *;

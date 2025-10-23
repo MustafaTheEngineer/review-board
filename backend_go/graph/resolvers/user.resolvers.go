@@ -331,11 +331,6 @@ func (r *userResolver) Username(ctx context.Context, obj *database.User) (*strin
 	return nil, nil
 }
 
-// Role is the resolver for the role field.
-func (r *userResolver) Role(ctx context.Context, obj *database.User) (string, error) {
-	return string(obj.Role), nil
-}
-
 // Mutation returns graph.MutationResolver implementation.
 func (r *Resolver) Mutation() graph.MutationResolver { return &mutationResolver{r} }
 

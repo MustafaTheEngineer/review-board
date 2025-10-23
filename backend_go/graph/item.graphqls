@@ -1,6 +1,7 @@
 directive @validateItemTitle on FIELD_DEFINITION
 directive @validateItemAmount on FIELD_DEFINITION
 directive @validateItemTags on FIELD_DEFINITION
+directive @isAdmin on FIELD_DEFINITION
 
 enum ItemStatus {
   NEW
@@ -27,6 +28,11 @@ extend type Mutation {
     @validateItemTags
     @validateItemAmount
     @validateItemTitle
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
+  updateItemStatus(id: ID!, status: ItemStatus!): Item!
+    @isAdmin
     @checkUsername
     @checkIfConfirmed
     @validateToken

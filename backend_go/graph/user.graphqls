@@ -1,10 +1,15 @@
+enum Role {
+  USER
+  ADMIN
+}
+
 type User {
   id: ID!
   email: String!
   username: String
   confirmed: Boolean!
   blocked: Boolean!
-  role: String!
+  role: Role!
 }
 
 directive @validateEmail on FIELD_DEFINITION

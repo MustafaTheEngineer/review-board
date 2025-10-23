@@ -1009,6 +1009,10 @@ func (ec *executionContext) unmarshalNCreateItemRequest2githubᚗcomᚋMustafaTh
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNItem2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItem(ctx context.Context, sel ast.SelectionSet, v database.Item) graphql.Marshaler {
+	return ec._Item(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNItem2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItem(ctx context.Context, sel ast.SelectionSet, v *database.Item) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {

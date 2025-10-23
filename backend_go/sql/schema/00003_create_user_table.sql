@@ -11,7 +11,7 @@ CREATE TABLE users (
     confirmation_token VARCHAR(255),
     confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     blocked BOOLEAN NOT NULL DEFAULT FALSE,
-    role role NOT NULL DEFAULT 'user',
+    role role NOT NULL DEFAULT 'USER',
     verification_code VARCHAR(10),
     verification_code_expiry TIMESTAMP,
 

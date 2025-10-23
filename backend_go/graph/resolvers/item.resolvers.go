@@ -168,6 +168,26 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 	}, tx.Commit()
 }
 
+// UpdateItemStatus is the resolver for the updateItemStatus field.
+func (r *mutationResolver) UpdateItemStatus(ctx context.Context, id string, status database.ItemStatus) (*database.Item, error) {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Invalid item ID", http.StatusBadRequest)
+		return nil, nil
+	}
+
+	dbItem, err := dbConfig.DbCfg.Queries.UpdateItemStatus(ctx, database.UpdateItemStatusParams{
+		ID:     uid,
+		Status: status,
+	})
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while updating item status", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	return &dbItem, nil
+}
+
 // Items is the resolver for the items field.
 func (r *queryResolver) Items(ctx context.Context, query *model.ItemsRequest) ([]*model.ItemsResponse, error) {
 	queryTags := goqu.Select("*").From("items")

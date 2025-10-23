@@ -1,14 +1,31 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { gql } from 'apollo-angular';
-import { Item, ItemGQL, ItemStatus } from '../../graphql/generated';
+import { Item, ItemGQL, ItemStatus, Role, UpdateItemStatusGQL } from '../../graphql/generated';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { TuiAppearance, TuiButton, TuiDataList, TuiDropdown, TuiTextfield, TuiTitle } from '@taiga-ui/core';
+import {
+  TuiAppearance,
+  TuiButton,
+  TuiDataList,
+  TuiDropdown,
+  TuiTextfield,
+  TuiTitle,
+} from '@taiga-ui/core';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
-import { TuiChevron, TuiChip, TuiComboBox, TuiDataListWrapper, TuiFilterByInputPipe, TuiStringifyContentPipe, TuiStringifyPipe } from '@taiga-ui/kit';
+import {
+  TuiChevron,
+  TuiChip,
+  TuiComboBox,
+  TuiDataListWrapper,
+  TuiFilterByInputPipe,
+  TuiStringifyContentPipe,
+  TuiStringifyPipe,
+} from '@taiga-ui/kit';
 import { FormsModule } from '@angular/forms';
 import { ItemService } from '../item-service';
+import { AppService } from '../app-service';
+import { ErrorService } from '../error-service';
 
 @Component({
   selector: 'app-item-details',
@@ -37,14 +54,23 @@ export class ItemDetails {
   route = inject(ActivatedRoute);
   router = inject(Router);
   itemGQL = inject(ItemGQL);
-  itemService = inject(ItemService)
+  updateItemStatusGQL = inject(UpdateItemStatusGQL);
+  itemService = inject(ItemService);
+  appService = inject(AppService);
+  errorService = inject(ErrorService);
+
+  Role = Role;
 
   itemStatus = signal(ItemStatus.New);
 
+  private id$ = this.route.paramMap.pipe(map((paramMap) => paramMap.get('id')));
+  id = toSignal(this.id$, {
+    initialValue: null,
+  });
+
   item = toSignal(
-    this.route.paramMap.pipe(
-      switchMap((paramMap) => {
-        const id = paramMap.get('id');
+    this.id$.pipe(
+      switchMap((id) => {
         if (!id) {
           this.router.navigate(['home', 'item']);
           throw new Error('Invalid item ID');
@@ -75,11 +101,66 @@ export class ItemDetails {
       }),
     ),
   );
+
+  updateItemStatus() {
+    const id = this.id();
+    if (!id) {
+      return;
+    }
+
+    this.updateItemStatusGQL
+      .mutate({
+        fetchPolicy: 'network-only',
+        variables: {
+          id: id,
+          status: this.itemStatus(),
+        },
+      })
+      .pipe(
+        catchError((error) => {
+          this.errorService.alerts
+            .open(`<strong>${error.message}</strong>`, {
+              appearance: 'negative',
+              autoClose: 5000,
+            })
+            .subscribe();
+
+          return of(new Error('Failed to update item status'));
+        }),
+      )
+      .subscribe((result) => {
+        if (!(result instanceof Error)) {
+          this.errorService.alerts
+            .open(`<strong>Item Status Updated</strong>`, {
+              appearance: 'positive',
+              autoClose: 5000,
+            })
+            .subscribe();
+        }
+      });
+  }
 }
 
 const ITEM = gql`
   query Item($id: ID!) {
     item(id: $id) {
+      id
+      creatorID
+      title
+      description
+      amount
+      status
+      deletedByUserID
+      deletedAt
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const UPDATE_ITEM_STATUS = gql`
+  mutation UpdateItemStatus($id: ID!, $status: ItemStatus!) {
+    updateItemStatus(id: $id, status: $status) {
       id
       creatorID
       title

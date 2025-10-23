@@ -24,13 +24,12 @@ type MutationResolver interface {
 	ConfirmUser(ctx context.Context, input model.ConfirmUserInput) (*model.ConfirmUserResponse, error)
 	SetUsername(ctx context.Context, username string) (*model.SetUsernameResponse, error)
 	CreateItem(ctx context.Context, input model.CreateItemRequest) (*model.CreateItemResponse, error)
+	UpdateItemStatus(ctx context.Context, id string, status database.ItemStatus) (*database.Item, error)
 }
 type UserResolver interface {
 	ID(ctx context.Context, obj *database.User) (string, error)
 
 	Username(ctx context.Context, obj *database.User) (*string, error)
-
-	Role(ctx context.Context, obj *database.User) (string, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -89,6 +88,22 @@ func (ec *executionContext) field_Mutation_signIn_args(ctx context.Context, rawA
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateItemStatus_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "status", ec.unmarshalNItemStatus2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItemStatus)
+	if err != nil {
+		return nil, err
+	}
+	args["status"] = arg1
 	return args, nil
 }
 
@@ -535,6 +550,103 @@ func (ec *executionContext) fieldContext_Mutation_createItem(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updateItemStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateItemStatus,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateItemStatus(ctx, fc.Args["id"].(string), fc.Args["status"].(database.ItemStatus))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.IsAdmin == nil {
+					var zeroVal *database.Item
+					return zeroVal, errors.New("directive isAdmin is not implemented")
+				}
+				return ec.directives.IsAdmin(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.directives.CheckUsername == nil {
+					var zeroVal *database.Item
+					return zeroVal, errors.New("directive checkUsername is not implemented")
+				}
+				return ec.directives.CheckUsername(ctx, nil, directive1)
+			}
+			directive3 := func(ctx context.Context) (any, error) {
+				if ec.directives.CheckIfConfirmed == nil {
+					var zeroVal *database.Item
+					return zeroVal, errors.New("directive checkIfConfirmed is not implemented")
+				}
+				return ec.directives.CheckIfConfirmed(ctx, nil, directive2)
+			}
+			directive4 := func(ctx context.Context) (any, error) {
+				if ec.directives.ValidateToken == nil {
+					var zeroVal *database.Item
+					return zeroVal, errors.New("directive validateToken is not implemented")
+				}
+				return ec.directives.ValidateToken(ctx, nil, directive3)
+			}
+
+			next = directive4
+			return next
+		},
+		ec.marshalNItem2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐItem,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateItemStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Item_id(ctx, field)
+			case "creatorID":
+				return ec.fieldContext_Item_creatorID(ctx, field)
+			case "title":
+				return ec.fieldContext_Item_title(ctx, field)
+			case "description":
+				return ec.fieldContext_Item_description(ctx, field)
+			case "amount":
+				return ec.fieldContext_Item_amount(ctx, field)
+			case "status":
+				return ec.fieldContext_Item_status(ctx, field)
+			case "deletedByUserID":
+				return ec.fieldContext_Item_deletedByUserID(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_Item_deletedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Item_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Item_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Item", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateItemStatus_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _RegisterUserResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.RegisterUserResponse) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -903,10 +1015,10 @@ func (ec *executionContext) _User_role(ctx context.Context, field graphql.Collec
 		field,
 		ec.fieldContext_User_role,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.User().Role(ctx, obj)
+			return obj.Role, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalNRole2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐRole,
 		true,
 		true,
 	)
@@ -916,10 +1028,10 @@ func (ec *executionContext) fieldContext_User_role(_ context.Context, field grap
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Role does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1175,6 +1287,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createItem(ctx, field)
 			})
+		case "updateItemStatus":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateItemStatus(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1426,41 +1545,10 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "role":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._User_role(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
+			out.Values[i] = ec._User_role(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
 			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1524,6 +1612,23 @@ func (ec *executionContext) marshalNRegisterUserResponse2ᚖgithubᚗcomᚋMusta
 		return graphql.Null
 	}
 	return ec._RegisterUserResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNRole2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐRole(ctx context.Context, v any) (database.Role, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := database.Role(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNRole2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐRole(ctx context.Context, sel ast.SelectionSet, v database.Role) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNSetUsernameResponse2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐSetUsernameResponse(ctx context.Context, sel ast.SelectionSet, v model.SetUsernameResponse) graphql.Marshaler {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	apiConfig "github.com/MustafaTheEngineer/review_board/config/api"
+	"github.com/MustafaTheEngineer/review_board/internal/database"
 	"github.com/MustafaTheEngineer/review_board/types"
 	"github.com/google/uuid"
 
@@ -37,11 +38,11 @@ func defineDirectives(c *generated.Config) {
 
 	c.Directives.ValidatePassword = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
 		password, ok := graphql.GetOperationContext(ctx).Variables["input"].(map[string]any)["password"].(string)
-		if!ok {
-            helpers.CreateGraphQLError(ctx, "Missing password in input", http.StatusBadRequest)
-            return nil, nil
-        }
-		
+		if !ok {
+			helpers.CreateGraphQLError(ctx, "Missing password in input", http.StatusBadRequest)
+			return nil, nil
+		}
+
 		err = helpers.V.VarWithKey("password", password, "min=8,max=20")
 		if err != nil {
 			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
@@ -148,6 +149,19 @@ func defineDirectives(c *generated.Config) {
 		err = helpers.V.VarWithKey("username", username, "min=3,max=20")
 		if err != nil {
 			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusNotAcceptable)
+			return nil, nil
+		}
+		return next(ctx)
+	}
+
+	c.Directives.IsAdmin = func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error) {
+		userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+		if !ok {
+			helpers.CreateGraphQLError(ctx, "Admin check requires authentication", http.StatusUnauthorized)
+			return nil, nil
+		}
+		if userContext.User.Role != database.RoleADMIN {
+			helpers.CreateGraphQLError(ctx, "You are not an admin", http.StatusUnauthorized)
 			return nil, nil
 		}
 		return next(ctx)

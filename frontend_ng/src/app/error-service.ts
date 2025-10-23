@@ -8,11 +8,4 @@ export class ErrorService {
   readonly alerts = inject(TuiAlertService);
   actionBarOpen = signal(true);
 
-  error = signal<{
-    httpStatus: number;
-    message: string;
-  }>({
-    httpStatus: 200,
-    message: '',
-  });
 }

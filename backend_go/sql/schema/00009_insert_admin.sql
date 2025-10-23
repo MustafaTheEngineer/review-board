@@ -8,7 +8,16 @@ INSERT INTO users (id, email, username, provider, password_hash, confirmed, role
     'email',
     '$2a$14$SnJ0rC1uLOvqvcmrqwAhcOkDvjXQRU3M9VhaaEYPk6Qb.VbmiS6Pq',
     TRUE,
-    'admin'
+    'ADMIN'
+    ),
+    (
+    '617d6126-efb6-454a-bdf2-a1b512e19569',
+    'user@mail.com',
+    'User',
+    'email',
+    '$2a$14$SnJ0rC1uLOvqvcmrqwAhcOkDvjXQRU3M9VhaaEYPk6Qb.VbmiS6Pq',
+    TRUE,
+    'USER'
     )
   ON CONFLICT DO NOTHING;
 -- +goose StatementEnd

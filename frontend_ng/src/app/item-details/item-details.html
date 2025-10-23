@@ -14,21 +14,31 @@
       {{ item.description }}
     </section>
 
-    <section [tuiAppearance]="itemService.itemStatusColor(itemStatus())" id="item-status-section">
-      <tui-textfield tuiChevron [tuiTextfieldCleaner]="false">
-        <input tuiComboBox [(ngModel)]="itemStatus" />
+    @if (appService.user.role === Role.Admin) {
+      <section [tuiAppearance]="itemService.itemStatusColor(itemStatus())" id="item-status-section">
+        <tui-textfield tuiChevron [tuiTextfieldCleaner]="false">
+          <input tuiComboBox [(ngModel)]="itemStatus" />
 
-        <tui-data-list-wrapper
-          *tuiTextfieldDropdown
-          new
-          [items]="itemService.itemStatuses | tuiFilterByInput"
-          [itemContent]="itemService.statusStringify | tuiStringifyContent"
-        />
-      </tui-textfield>
-    </section>
+          <tui-data-list-wrapper
+            *tuiTextfieldDropdown
+            new
+            [items]="itemService.itemStatuses | tuiFilterByInput"
+            [itemContent]="itemService.statusStringify | tuiStringifyContent"
+          />
+        </tui-textfield>
+      </section>
 
-    <footer>
-      <button appearance="secondary" size="m" tuiButton type="button">Save</button>
-    </footer>
+      <footer>
+        <button
+          appearance="secondary"
+          size="m"
+          tuiButton
+          type="button"
+          (click)="updateItemStatus()"
+        >
+          Save
+        </button>
+      </footer>
+    }
   </div>
 }

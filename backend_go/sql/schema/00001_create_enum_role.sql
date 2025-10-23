@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TYPE role AS ENUM ('user', 'admin');
+CREATE TYPE role AS ENUM ('USER', 'ADMIN');
 -- +goose StatementEnd
 
 -- +goose Down

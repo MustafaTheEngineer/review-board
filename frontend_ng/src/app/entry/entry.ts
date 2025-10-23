@@ -1,8 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
-import { RegisterUserGQL, SignInGQL } from '../../graphql/generated';
+import { RegisterUserGQL, Role, SignInGQL, ValidateTokenGQL } from '../../graphql/generated';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, combineLatest, map, of, startWith } from 'rxjs';
+import { catchError, combineLatest, filter, map, of, startWith, switchMap } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   TuiAppearance,
@@ -18,6 +18,7 @@ import { error } from 'console';
 import { Router } from '@angular/router';
 import { ErrorLink } from '@apollo/client/link/error';
 import { ErrorService } from '../error-service';
+import { AppService } from '../app-service';
 
 @Component({
   selector: 'app-entry',
@@ -50,7 +51,9 @@ export class Entry {
   router = inject(Router);
   registerUserGQL = inject(RegisterUserGQL);
   signInGQL = inject(SignInGQL);
+  validateTokenGQL = inject(ValidateTokenGQL);
   apollo = inject(Apollo);
+  appService = inject(AppService);
 
   registerOrSignIn = signal(true);
 
@@ -59,15 +62,15 @@ export class Entry {
   }
 
   form = new FormGroup({
-    email: new FormControl('mustafaesat01@gmail.com', {
+    email: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.email],
     }),
-    password: new FormControl('123456789', {
+    password: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(8)],
     }),
-    confirmPassword: new FormControl('123456789', {
+    confirmPassword: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required],
     }),
@@ -180,10 +183,52 @@ export class Entry {
               .subscribe();
             return of(new Error('Failed to sign in'));
           }),
+          switchMap((result) => {
+            if (result instanceof Error) {
+              this.errorService.alerts
+                .open(`<strong>${result.message}</strong>`, {
+                  appearance: 'negative',
+                  autoClose: 5000,
+                })
+                .subscribe();
+
+              return of(new Error('Failed to sign in'));
+            }
+
+            return this.validateTokenGQL
+              .fetch({
+                fetchPolicy: 'network-only',
+              })
+              .pipe(
+                catchError((error) => {
+                  return of(new Error('Failed to validate token'));
+                }),
+                switchMap((result) => {
+                  if (result instanceof Error) {
+                    this.appService.user = {
+                      id: '',
+                      blocked: false,
+                      confirmed: false,
+                      email: '',
+                      role: Role.User,
+                    };
+
+                    return of(null);
+                  } else {
+                    if (result.data?.validateToken)
+                      this.appService.user = result.data?.validateToken.user;
+
+                    this.router.navigate(['home']);
+
+                    return of(null);
+                  }
+                }),
+              );
+          }),
         )
         .subscribe((data) => {
           if (!(data instanceof Error)) {
-            this.router.navigate(['confirm-account']);
+            this.router.navigate(['home']);
           }
         });
     }

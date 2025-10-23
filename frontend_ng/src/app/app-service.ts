@@ -1,6 +1,7 @@
 import { afterNextRender, inject, Injectable, signal } from '@angular/core';
 import { gql } from 'apollo-angular';
 import {
+  Role,
   User,
   UserConfirmedGQL,
   UserHaveUsernameGQL,
@@ -23,7 +24,7 @@ export class AppService {
     blocked: false,
     confirmed: false,
     email: '',
-    role: '',
+    role: Role.User,
   };
 
   constructor() {
@@ -43,7 +44,7 @@ export class AppService {
                 blocked: false,
                 confirmed: false,
                 email: '',
-                role: '',
+                role: Role.User,
               };
 
               return of(null);

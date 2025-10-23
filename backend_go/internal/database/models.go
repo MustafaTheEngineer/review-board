@@ -60,8 +60,8 @@ func (ns NullItemStatus) Value() (driver.Value, error) {
 type Role string
 
 const (
-	RoleUser  Role = "user"
-	RoleAdmin Role = "admin"
+	RoleUSER  Role = "USER"
+	RoleADMIN Role = "ADMIN"
 )
 
 func (e *Role) Scan(src interface{}) error {

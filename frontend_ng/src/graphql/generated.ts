@@ -86,6 +86,7 @@ export type Mutation = {
   registerUser: RegisterUserResponse;
   setUsername: SetUsernameResponse;
   signIn: SignInResponse;
+  updateItemStatus: Item;
 };
 
 
@@ -111,6 +112,12 @@ export type MutationSetUsernameArgs = {
 
 export type MutationSignInArgs = {
   input: SignInInput;
+};
+
+
+export type MutationUpdateItemStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: ItemStatus;
 };
 
 export type NewUser = {
@@ -161,6 +168,11 @@ export type RegisterUserResponse = {
   user: User;
 };
 
+export enum Role {
+  Admin = 'ADMIN',
+  User = 'USER'
+}
+
 export type SetUsernameResponse = {
   __typename?: 'SetUsernameResponse';
   message: Scalars['String']['output'];
@@ -201,7 +213,7 @@ export type User = {
   confirmed: Scalars['Boolean']['output'];
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  role: Scalars['String']['output'];
+  role: Role;
   username?: Maybe<Scalars['String']['output']>;
 };
 
@@ -215,7 +227,7 @@ export type UsersInput = {
 export type ValidateTokenQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ValidateTokenQuery = { __typename?: 'Query', validateToken: { __typename?: 'TokenValidationResponse', user: { __typename?: 'User', id: string, email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+export type ValidateTokenQuery = { __typename?: 'Query', validateToken: { __typename?: 'TokenValidationResponse', user: { __typename?: 'User', id: string, email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: Role } } };
 
 export type UserConfirmedQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -246,21 +258,21 @@ export type ConfirmUserMutationVariables = Exact<{
 }>;
 
 
-export type ConfirmUserMutation = { __typename?: 'Mutation', confirmUser: { __typename?: 'ConfirmUserResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, role: string, confirmed: boolean } } };
+export type ConfirmUserMutation = { __typename?: 'Mutation', confirmUser: { __typename?: 'ConfirmUserResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, role: Role, confirmed: boolean } } };
 
 export type RegisterUserMutationVariables = Exact<{
   input: NewUser;
 }>;
 
 
-export type RegisterUserMutation = { __typename?: 'Mutation', registerUser: { __typename?: 'RegisterUserResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+export type RegisterUserMutation = { __typename?: 'Mutation', registerUser: { __typename?: 'RegisterUserResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: Role } } };
 
 export type SignInMutationVariables = Exact<{
   input: SignInInput;
 }>;
 
 
-export type SignInMutation = { __typename?: 'Mutation', signIn: { __typename?: 'SignInResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: string } } };
+export type SignInMutation = { __typename?: 'Mutation', signIn: { __typename?: 'SignInResponse', message: string, user: { __typename?: 'User', email: string, username?: string | null, confirmed: boolean, blocked: boolean, role: Role } } };
 
 export type ItemQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -268,6 +280,14 @@ export type ItemQueryVariables = Exact<{
 
 
 export type ItemQuery = { __typename?: 'Query', item?: { __typename?: 'Item', id: string, creatorID: string, title: string, description?: string | null, amount: string, status: ItemStatus, deletedByUserID?: string | null, deletedAt?: any | null, createdAt: any, updatedAt: any } | null };
+
+export type UpdateItemStatusMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  status: ItemStatus;
+}>;
+
+
+export type UpdateItemStatusMutation = { __typename?: 'Mutation', updateItemStatus: { __typename?: 'Item', id: string, creatorID: string, title: string, description?: string | null, amount: string, status: ItemStatus, deletedByUserID?: string | null, deletedAt?: any | null, createdAt: any, updatedAt: any } };
 
 export type CreateItemMutationVariables = Exact<{
   input: CreateItemRequest;
@@ -490,6 +510,33 @@ export const ItemDocument = gql`
   })
   export class ItemGQL extends Apollo.Query<ItemQuery, ItemQueryVariables> {
     document = ItemDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const UpdateItemStatusDocument = gql`
+    mutation UpdateItemStatus($id: ID!, $status: ItemStatus!) {
+  updateItemStatus(id: $id, status: $status) {
+    id
+    creatorID
+    title
+    description
+    amount
+    status
+    deletedByUserID
+    deletedAt
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class UpdateItemStatusGQL extends Apollo.Mutation<UpdateItemStatusMutation, UpdateItemStatusMutationVariables> {
+    document = UpdateItemStatusDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

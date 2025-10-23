@@ -11,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/MustafaTheEngineer/review_board/graph/model"
+	"github.com/MustafaTheEngineer/review_board/internal/database"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -43,6 +44,7 @@ type ResolverRoot interface {
 type DirectiveRoot struct {
 	CheckIfConfirmed   func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	CheckUsername      func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
+	IsAdmin            func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	ValidateEmail      func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	ValidateItemAmount func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 	ValidateItemTags   func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
@@ -82,11 +84,12 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ConfirmUser  func(childComplexity int, input model.ConfirmUserInput) int
-		CreateItem   func(childComplexity int, input model.CreateItemRequest) int
-		RegisterUser func(childComplexity int, input model.NewUser) int
-		SetUsername  func(childComplexity int, username string) int
-		SignIn       func(childComplexity int, input model.SignInInput) int
+		ConfirmUser      func(childComplexity int, input model.ConfirmUserInput) int
+		CreateItem       func(childComplexity int, input model.CreateItemRequest) int
+		RegisterUser     func(childComplexity int, input model.NewUser) int
+		SetUsername      func(childComplexity int, username string) int
+		SignIn           func(childComplexity int, input model.SignInInput) int
+		UpdateItemStatus func(childComplexity int, id string, status database.ItemStatus) int
 	}
 
 	Query struct {
@@ -324,6 +327,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SignIn(childComplexity, args["input"].(model.SignInInput)), true
+
+	case "Mutation.updateItemStatus":
+		if e.complexity.Mutation.UpdateItemStatus == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateItemStatus_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateItemStatus(childComplexity, args["id"].(string), args["status"].(database.ItemStatus)), true
 
 	case "Query.isUsernameTaken":
 		if e.complexity.Query.IsUsernameTaken == nil {
@@ -626,6 +641,7 @@ var sources = []*ast.Source{
 	{Name: "../item.graphqls", Input: `directive @validateItemTitle on FIELD_DEFINITION
 directive @validateItemAmount on FIELD_DEFINITION
 directive @validateItemTags on FIELD_DEFINITION
+directive @isAdmin on FIELD_DEFINITION
 
 enum ItemStatus {
   NEW
@@ -652,6 +668,11 @@ extend type Mutation {
     @validateItemTags
     @validateItemAmount
     @validateItemTitle
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
+  updateItemStatus(id: ID!, status: ItemStatus!): Item!
+    @isAdmin
     @checkUsername
     @checkIfConfirmed
     @validateToken
@@ -686,7 +707,8 @@ input ItemsRequest {
 type ItemsResponse {
   item: Item!
   tags: [Tag!]!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
@@ -723,13 +745,18 @@ input TagsInput {
   like: String
 }
 `, BuiltIn: false},
-	{Name: "../user.graphqls", Input: `type User {
+	{Name: "../user.graphqls", Input: `enum Role {
+  USER
+  ADMIN
+}
+
+type User {
   id: ID!
   email: String!
   username: String
   confirmed: Boolean!
   blocked: Boolean!
-  role: String!
+  role: Role!
 }
 
 directive @validateEmail on FIELD_DEFINITION
