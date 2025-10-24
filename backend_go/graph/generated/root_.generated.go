@@ -34,6 +34,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	AuditLog() AuditLogResolver
 	Item() ItemResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
@@ -55,6 +56,21 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AuditLog struct {
+		Action        func(childComplexity int) int
+		ChangedFields func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		Description   func(childComplexity int) int
+		EntityID      func(childComplexity int) int
+		EntityType    func(childComplexity int) int
+		ID            func(childComplexity int) int
+		NewValues     func(childComplexity int) int
+		OldValues     func(childComplexity int) int
+		UserEmail     func(childComplexity int) int
+		UserID        func(childComplexity int) int
+		UserRole      func(childComplexity int) int
+	}
+
 	ConfirmUserResponse struct {
 		Message func(childComplexity int) int
 		User    func(childComplexity int) int
@@ -94,6 +110,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		AuditLogs        func(childComplexity int) int
 		IsUsernameTaken  func(childComplexity int, username string) int
 		Item             func(childComplexity int, id string) int
 		Items            func(childComplexity int, query *model.ItemsRequest) int
@@ -156,6 +173,90 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "AuditLog.action":
+		if e.complexity.AuditLog.Action == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.Action(childComplexity), true
+
+	case "AuditLog.changedFields":
+		if e.complexity.AuditLog.ChangedFields == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.ChangedFields(childComplexity), true
+
+	case "AuditLog.createdAt":
+		if e.complexity.AuditLog.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.CreatedAt(childComplexity), true
+
+	case "AuditLog.description":
+		if e.complexity.AuditLog.Description == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.Description(childComplexity), true
+
+	case "AuditLog.entityId":
+		if e.complexity.AuditLog.EntityID == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.EntityID(childComplexity), true
+
+	case "AuditLog.entityType":
+		if e.complexity.AuditLog.EntityType == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.EntityType(childComplexity), true
+
+	case "AuditLog.id":
+		if e.complexity.AuditLog.ID == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.ID(childComplexity), true
+
+	case "AuditLog.newValues":
+		if e.complexity.AuditLog.NewValues == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.NewValues(childComplexity), true
+
+	case "AuditLog.oldValues":
+		if e.complexity.AuditLog.OldValues == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.OldValues(childComplexity), true
+
+	case "AuditLog.userEmail":
+		if e.complexity.AuditLog.UserEmail == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.UserEmail(childComplexity), true
+
+	case "AuditLog.userId":
+		if e.complexity.AuditLog.UserID == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.UserID(childComplexity), true
+
+	case "AuditLog.userRole":
+		if e.complexity.AuditLog.UserRole == nil {
+			break
+		}
+
+		return e.complexity.AuditLog.UserRole(childComplexity), true
 
 	case "ConfirmUserResponse.message":
 		if e.complexity.ConfirmUserResponse.Message == nil {
@@ -347,6 +448,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateItemStatus(childComplexity, args["id"].(string), args["status"].(database.ItemStatus)), true
+
+	case "Query.auditLogs":
+		if e.complexity.Query.AuditLogs == nil {
+			break
+		}
+
+		return e.complexity.Query.AuditLogs(childComplexity), true
 
 	case "Query.isUsernameTaken":
 		if e.complexity.Query.IsUsernameTaken == nil {
@@ -646,6 +754,41 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "../audit_log.graphqls", Input: `enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+  STATUS_CHANGE
+  ROLE_CHANGE
+}
+
+type AuditLog {
+  id: ID!
+  userId: ID
+  userEmail: String
+  userRole: Role
+  entityType: String!
+  entityId: ID!
+  action: AuditAction!
+  oldValues: JSON
+  newValues: JSON
+  changedFields: [String!]
+  description: String
+  createdAt: String!
+}
+
+extend type Query {
+  auditLogs: [AuditLog!]!
+    @isAdmin
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
+}
+`, BuiltIn: false},
 	{Name: "../item.graphqls", Input: `directive @validateItemTitle on FIELD_DEFINITION
 directive @validateItemAmount on FIELD_DEFINITION
 directive @validateItemTags on FIELD_DEFINITION
@@ -725,6 +868,7 @@ type ItemsResponse {
 scalar Date
 scalar Any
 scalar UUID
+scalar JSON
 
 directive @validateToken on FIELD_DEFINITION
 

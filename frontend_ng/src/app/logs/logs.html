@@ -1,0 +1,48 @@
+<table tuiTable class="table" [columns]="columns">
+  <thead>
+    <tr tuiThGroup>
+      <th tuiTh [maxWidth]="500" [minWidth]="200" [resizable]="true">ID</th>
+      <th tuiTh>User ID</th>
+      <th tuiTh>User Email</th>
+      <th tuiTh>User Role</th>
+      <th tuiTh>Entity Type</th>
+      <th tuiTh>Entity ID</th>
+      <th tuiTh>Action</th>
+      <th tuiTh>Description</th>
+      <th tuiTh>Date</th>
+    </tr>
+  </thead>
+  <tbody tuiTbody>
+    @for (item of auditLogs(); track $index) {
+      <tr tuiTr>
+        <td *tuiCell="'id'" tuiTd>
+          {{ item.id }}
+        </td>
+        <td *tuiCell="'userId'" tuiTd>
+          {{ item.userId }}
+        </td>
+        <td *tuiCell="'userEmail'" tuiTd>
+          {{ item.userEmail }}
+        </td>
+        <td *tuiCell="'userRole'" tuiTd>
+          {{ item.userRole }}
+        </td>
+        <td *tuiCell="'entityType'" tuiTd>
+          {{ item.entityType }}
+        </td>
+        <td *tuiCell="'entityId'" tuiTd>
+          {{ item.entityId }}
+        </td>
+        <td *tuiCell="'action'" tuiTd>
+          {{ item.action }}
+        </td>
+        <td *tuiCell="'description'" tuiTd>
+          {{ item.description }}
+        </td>
+        <td *tuiCell="'createdAt'" tuiTd>
+          {{ item.createdAt | date: 'yyyy-MM-dd HH:mm:ss' }}
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

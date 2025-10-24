@@ -1727,6 +1727,25 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋMustafaTheEngineerᚋ
 	return ec._User(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalORole2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐRole(ctx context.Context, v any) (*database.Role, error) {
+	if v == nil {
+		return nil, nil
+	}
+	tmp, err := graphql.UnmarshalString(v)
+	res := database.Role(tmp)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalORole2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐRole(ctx context.Context, sel ast.SelectionSet, v *database.Role) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalString(string(*v))
+	return res
+}
+
 func (ec *executionContext) unmarshalOUsersInput2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐUsersInput(ctx context.Context, v any) (*model.UsersInput, error) {
 	if v == nil {
 		return nil, nil

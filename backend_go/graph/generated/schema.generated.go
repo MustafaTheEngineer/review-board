@@ -19,6 +19,7 @@ import (
 
 type QueryResolver interface {
 	ValidateToken(ctx context.Context) (*model.TokenValidationResponse, error)
+	AuditLogs(ctx context.Context) ([]*database.AuditLog, error)
 	Items(ctx context.Context, query *model.ItemsRequest) ([]*model.ItemsResponse, error)
 	Item(ctx context.Context, id string) (*database.Item, error)
 	Tags(ctx context.Context, query *model.TagsInput) ([]*database.Tag, error)
@@ -147,6 +148,95 @@ func (ec *executionContext) fieldContext_Query_validateToken(_ context.Context, 
 				return ec.fieldContext_TokenValidationResponse_user(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TokenValidationResponse", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_auditLogs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_auditLogs,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().AuditLogs(ctx)
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.IsAdmin == nil {
+					var zeroVal []*database.AuditLog
+					return zeroVal, errors.New("directive isAdmin is not implemented")
+				}
+				return ec.directives.IsAdmin(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.directives.CheckUsername == nil {
+					var zeroVal []*database.AuditLog
+					return zeroVal, errors.New("directive checkUsername is not implemented")
+				}
+				return ec.directives.CheckUsername(ctx, nil, directive1)
+			}
+			directive3 := func(ctx context.Context) (any, error) {
+				if ec.directives.CheckIfConfirmed == nil {
+					var zeroVal []*database.AuditLog
+					return zeroVal, errors.New("directive checkIfConfirmed is not implemented")
+				}
+				return ec.directives.CheckIfConfirmed(ctx, nil, directive2)
+			}
+			directive4 := func(ctx context.Context) (any, error) {
+				if ec.directives.ValidateToken == nil {
+					var zeroVal []*database.AuditLog
+					return zeroVal, errors.New("directive validateToken is not implemented")
+				}
+				return ec.directives.ValidateToken(ctx, nil, directive3)
+			}
+
+			next = directive4
+			return next
+		},
+		ec.marshalNAuditLog2ᚕᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋinternalᚋdatabaseᚐAuditLogᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_auditLogs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AuditLog_id(ctx, field)
+			case "userId":
+				return ec.fieldContext_AuditLog_userId(ctx, field)
+			case "userEmail":
+				return ec.fieldContext_AuditLog_userEmail(ctx, field)
+			case "userRole":
+				return ec.fieldContext_AuditLog_userRole(ctx, field)
+			case "entityType":
+				return ec.fieldContext_AuditLog_entityType(ctx, field)
+			case "entityId":
+				return ec.fieldContext_AuditLog_entityId(ctx, field)
+			case "action":
+				return ec.fieldContext_AuditLog_action(ctx, field)
+			case "oldValues":
+				return ec.fieldContext_AuditLog_oldValues(ctx, field)
+			case "newValues":
+				return ec.fieldContext_AuditLog_newValues(ctx, field)
+			case "changedFields":
+				return ec.fieldContext_AuditLog_changedFields(ctx, field)
+			case "description":
+				return ec.fieldContext_AuditLog_description(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AuditLog_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuditLog", field.Name)
 		},
 	}
 	return fc, nil
@@ -769,6 +859,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "auditLogs":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_auditLogs(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "items":
 			field := field
 
@@ -1033,6 +1145,24 @@ func (ec *executionContext) unmarshalODate2ᚖstring(ctx context.Context, v any)
 }
 
 func (ec *executionContext) marshalODate2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOJSON2ᚖstring(ctx context.Context, v any) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOJSON2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

@@ -40,11 +40,18 @@
 <div id="container">
   <aside [tuiNavigationAside]="expanded()">
     <header>
-      <button iconStart="@tui.home" tuiAsideItem type="button">
-        <span tuiFade>A very very long product name</span>
+      <button iconStart="@tui.home" tuiAsideItem type="button" (click)="routeTo(['home'])">
+        <span tuiFade>Home</span>
       </button>
     </header>
-    <a iconStart="@tui.users" tuiAsideItem [routerLink]="routes.Navigation"> Groups </a>
+    <a
+      iconStart="@tui.clipboard-clock"
+      tuiAsideItem
+      [routerLink]="routes.Navigation"
+      (click)="routeTo(['home', 'logs'])"
+    >
+      Logs
+    </a>
     <tui-aside-group>
       <button
         automation-id="setting"

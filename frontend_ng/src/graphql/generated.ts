@@ -17,7 +17,36 @@ export type Scalars = {
   Float: { input: number; output: number; }
   Any: { input: any; output: any; }
   Date: { input: any; output: any; }
+  JSON: { input: any; output: any; }
   UUID: { input: any; output: any; }
+};
+
+export enum AuditAction {
+  Create = 'CREATE',
+  Delete = 'DELETE',
+  EmailVerification = 'EMAIL_VERIFICATION',
+  Login = 'LOGIN',
+  Logout = 'LOGOUT',
+  PasswordReset = 'PASSWORD_RESET',
+  RoleChange = 'ROLE_CHANGE',
+  StatusChange = 'STATUS_CHANGE',
+  Update = 'UPDATE'
+}
+
+export type AuditLog = {
+  __typename?: 'AuditLog';
+  action: AuditAction;
+  changedFields?: Maybe<Array<Scalars['String']['output']>>;
+  createdAt: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  entityId: Scalars['ID']['output'];
+  entityType: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  newValues?: Maybe<Scalars['JSON']['output']>;
+  oldValues?: Maybe<Scalars['JSON']['output']>;
+  userEmail?: Maybe<Scalars['String']['output']>;
+  userId?: Maybe<Scalars['ID']['output']>;
+  userRole?: Maybe<Role>;
 };
 
 export type ConfirmUserInput = {
@@ -128,6 +157,7 @@ export type NewUser = {
 
 export type Query = {
   __typename?: 'Query';
+  auditLogs: Array<AuditLog>;
   isUsernameTaken: Scalars['Boolean']['output'];
   item?: Maybe<Item>;
   items: Array<ItemsResponse>;
@@ -290,6 +320,11 @@ export type UpdateItemStatusMutationVariables = Exact<{
 
 
 export type UpdateItemStatusMutation = { __typename?: 'Mutation', updateItemStatus: { __typename?: 'Item', id: string, creatorID: string, title: string, description?: string | null, amount: string, status: ItemStatus, deletedByUserID?: string | null, deletedAt?: any | null, createdAt: any, updatedAt: any } };
+
+export type AuditLogsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AuditLogsQuery = { __typename?: 'Query', auditLogs: Array<{ __typename?: 'AuditLog', id: string, userId?: string | null, userEmail?: string | null, userRole?: Role | null, entityType: string, entityId: string, action: AuditAction, oldValues?: any | null, newValues?: any | null, changedFields?: Array<string> | null, description?: string | null, createdAt: string }> };
 
 export type CreateItemMutationVariables = Exact<{
   input: CreateItemRequest;
@@ -540,6 +575,35 @@ export const UpdateItemStatusDocument = gql`
   })
   export class UpdateItemStatusGQL extends Apollo.Mutation<UpdateItemStatusMutation, UpdateItemStatusMutationVariables> {
     document = UpdateItemStatusDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const AuditLogsDocument = gql`
+    query AuditLogs {
+  auditLogs {
+    id
+    userId
+    userEmail
+    userRole
+    entityType
+    entityId
+    action
+    oldValues
+    newValues
+    changedFields
+    description
+    createdAt
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class AuditLogsGQL extends Apollo.Query<AuditLogsQuery, AuditLogsQueryVariables> {
+    document = AuditLogsDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

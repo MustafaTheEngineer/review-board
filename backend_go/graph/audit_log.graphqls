@@ -1,0 +1,34 @@
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+  STATUS_CHANGE
+  ROLE_CHANGE
+}
+
+type AuditLog {
+  id: ID!
+  userId: ID
+  userEmail: String
+  userRole: Role
+  entityType: String!
+  entityId: ID!
+  action: AuditAction!
+  oldValues: JSON
+  newValues: JSON
+  changedFields: [String!]
+  description: String
+  createdAt: String!
+}
+
+extend type Query {
+  auditLogs: [AuditLog!]!
+    @isAdmin
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
+}

@@ -1,7 +1,7 @@
 import { KeyValuePipe, NgForOf, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
   TuiAppearance,
   TuiButton,
@@ -56,11 +56,17 @@ import { tuiAsPortal, TuiPortals, TuiRepeatTimes } from '@taiga-ui/cdk';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Home {
+  router = inject(Router);
+
   protected expanded = signal(false);
   protected readonly routes: any = {};
   protected readonly breadcrumbs = ['Home'];
 
   protected handleToggle(): void {
     this.expanded.update((e) => !e);
+  }
+
+  routeTo(path: string[]): void {
+    this.router.navigate(path);
   }
 }

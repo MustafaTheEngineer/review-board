@@ -5,6 +5,7 @@
 scalar Date
 scalar Any
 scalar UUID
+scalar JSON
 
 directive @validateToken on FIELD_DEFINITION
 

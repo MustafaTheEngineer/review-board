@@ -6,6 +6,7 @@ import { ChooseUsername } from './choose-username/choose-username';
 import { ManageItem } from './manage-item/manage-item';
 import { SearchItem } from './search-item/search-item';
 import { ItemDetails } from './item-details/item-details';
+import { Logs } from './logs/logs';
 
 export const routes: Routes = [
   { path: 'entry', component: Entry },
@@ -41,6 +42,10 @@ export const routes: Routes = [
             pathMatch: 'full',
           },
         ],
+      },
+      {
+        path: 'logs',
+        component: Logs,
       },
       {
         path: '',

@@ -131,7 +131,6 @@ export class SearchItem {
           tap((response) => {
             if (!(response instanceof Error)) {
               if (response.data?.users) {
-                console.log(response.data?.users);
                 response.data.users.forEach((user) => {
                   this.usersMap().set(user.id, user);
                 });
@@ -323,7 +322,6 @@ export class SearchItem {
               tap((response) => {
                 if (!(response instanceof Error)) {
                   if (response.data?.users) {
-                    console.log(response.data?.users);
                     response.data.users.forEach((user) => {
                       this.usersMap().set(user.id, user);
                     });
