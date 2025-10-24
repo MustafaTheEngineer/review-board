@@ -11,7 +11,57 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sqlc-dev/pqtype"
 )
+
+type AuditAction string
+
+const (
+	AuditActionCREATE            AuditAction = "CREATE"
+	AuditActionUPDATE            AuditAction = "UPDATE"
+	AuditActionDELETE            AuditAction = "DELETE"
+	AuditActionLOGIN             AuditAction = "LOGIN"
+	AuditActionLOGOUT            AuditAction = "LOGOUT"
+	AuditActionPASSWORDRESET     AuditAction = "PASSWORD_RESET"
+	AuditActionEMAILVERIFICATION AuditAction = "EMAIL_VERIFICATION"
+	AuditActionSTATUSCHANGE      AuditAction = "STATUS_CHANGE"
+	AuditActionROLECHANGE        AuditAction = "ROLE_CHANGE"
+)
+
+func (e *AuditAction) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AuditAction(s)
+	case string:
+		*e = AuditAction(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AuditAction: %T", src)
+	}
+	return nil
+}
+
+type NullAuditAction struct {
+	AuditAction AuditAction `json:"auditAction"`
+	Valid       bool        `json:"valid"` // Valid is true if AuditAction is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAuditAction) Scan(value interface{}) error {
+	if value == nil {
+		ns.AuditAction, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AuditAction.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAuditAction) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AuditAction), nil
+}
 
 type ItemStatus string
 
@@ -97,6 +147,21 @@ func (ns NullRole) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.Role), nil
+}
+
+type AuditLog struct {
+	ID            uuid.UUID             `json:"id"`
+	UserID        uuid.NullUUID         `json:"userId"`
+	UserEmail     sql.NullString        `json:"userEmail"`
+	UserRole      NullRole              `json:"userRole"`
+	EntityType    string                `json:"entityType"`
+	EntityID      uuid.UUID             `json:"entityId"`
+	Action        AuditAction           `json:"action"`
+	OldValues     pqtype.NullRawMessage `json:"oldValues"`
+	NewValues     pqtype.NullRawMessage `json:"newValues"`
+	ChangedFields []string              `json:"changedFields"`
+	Description   sql.NullString        `json:"description"`
+	CreatedAt     time.Time             `json:"createdAt"`
 }
 
 type Item struct {

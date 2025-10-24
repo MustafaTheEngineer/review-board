@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	handlers "github.com/MustafaTheEngineer/review_board/audit"
 	dbConfig "github.com/MustafaTheEngineer/review_board/config/db"
 	graph "github.com/MustafaTheEngineer/review_board/graph/generated"
 	"github.com/MustafaTheEngineer/review_board/graph/model"
@@ -80,6 +81,22 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 		helpers.CreateGraphQLError(ctx, "Error while registering user", http.StatusInternalServerError)
 		return nil, nil
 	}
+
+	err = handlers.InsertAuditLog(
+		qtx,
+		ctx,
+		dbUser.ID,
+		dbUser.Email,
+		dbUser.Role,
+		"USER",
+		dbUser.ID,
+		database.AuditActionCREATE, nil, dbUser, nil)
+
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+            return nil, nil
+
+		}
 
 	jwtInfo, err := helpers.GenerateJWT(userID.String(), string(dbUser.Role))
 
