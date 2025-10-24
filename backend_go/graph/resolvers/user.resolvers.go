@@ -82,21 +82,28 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 		return nil, nil
 	}
 
+	message := "Registered new user"
+
 	err = handlers.InsertAuditLog(
 		qtx,
 		ctx,
-		dbUser.ID,
-		dbUser.Email,
-		dbUser.Role,
-		"USER",
-		dbUser.ID,
-		database.AuditActionCREATE, nil, dbUser, nil)
+		handlers.Log[database.User]{
+			UserID:      dbUser.ID,
+			UserEmail:   dbUser.Email,
+			UserRole:    dbUser.Role,
+			EntityType:  "USER",
+			EntityID:    dbUser.ID,
+			Action:      database.AuditActionCREATE,
+			OldValues:   nil,
+			NewValues:   &dbUser,
+			Description: &message,
+		})
 
-		if err != nil {
-			helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
-            return nil, nil
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+		return nil, nil
 
-		}
+	}
 
 	jwtInfo, err := helpers.GenerateJWT(userID.String(), string(dbUser.Role))
 
@@ -127,7 +134,17 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input model.NewUser
 
 // SignIn is the resolver for the signIn field.
 func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*model.SignInResponse, error) {
-	dbUser, err := dbConfig.DbCfg.Queries.GetUserByEmail(ctx, input.Email)
+	tx, err := dbConfig.DbCfg.SqlDb.Begin()
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while starting transaction", http.StatusInternalServerError)
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	qtx := dbConfig.DbCfg.Queries.WithTx(tx)
+
+	dbUser, err := qtx.GetUserByEmail(ctx, input.Email)
 
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -137,6 +154,29 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 			helpers.CreateGraphQLError(ctx, "User not found", http.StatusNotFound)
 			return nil, nil
 		}
+	}
+
+	message := "Signed in"
+
+	err = handlers.InsertAuditLog(
+		qtx,
+		ctx,
+		handlers.Log[database.User]{
+			UserID:      dbUser.ID,
+			UserEmail:   dbUser.Email,
+			UserRole:    dbUser.Role,
+			EntityType:  "USER",
+			EntityID:    dbUser.ID,
+			Action:      database.AuditActionLOGIN,
+			OldValues:   nil,
+			NewValues:   nil,
+			Description: &message,
+		})
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+		return nil, nil
+
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.PasswordHash), []byte(input.Password)); err != nil {
@@ -186,7 +226,17 @@ func (r *mutationResolver) ConfirmUser(ctx context.Context, input model.ConfirmU
 		return nil, nil
 	}
 
-	user, err := dbConfig.DbCfg.Queries.ConfirmUser(ctx, database.ConfirmUserParams{
+	tx, err := dbConfig.DbCfg.SqlDb.Begin()
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while starting transaction", http.StatusInternalServerError)
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	qtx := dbConfig.DbCfg.Queries.WithTx(tx)
+
+	user, err := qtx.ConfirmUser(ctx, database.ConfirmUserParams{
 		ID:       userContext.User.ID,
 		Provider: "email",
 		VerificationCode: sql.NullString{
@@ -197,6 +247,29 @@ func (r *mutationResolver) ConfirmUser(ctx context.Context, input model.ConfirmU
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Invalid confirmation code", http.StatusBadRequest)
 		return nil, nil
+	}
+
+	message := "Confirmed user"
+
+	err = handlers.InsertAuditLog(
+		qtx,
+		ctx,
+		handlers.Log[database.User]{
+			UserID:      user.ID,
+			UserEmail:   user.Email,
+			UserRole:    user.Role,
+			EntityType:  "USER",
+			EntityID:    user.ID,
+			Action:      database.AuditActionEMAILVERIFICATION,
+			OldValues:   nil,
+			NewValues:   &user,
+			Description: &message,
+		})
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+		return nil, nil
+
 	}
 
 	return &model.ConfirmUserResponse{
@@ -213,7 +286,17 @@ func (r *mutationResolver) SetUsername(ctx context.Context, username string) (*m
 		return nil, nil
 	}
 
-	dbUser, err := dbConfig.DbCfg.Queries.SetUserUsername(ctx, database.SetUserUsernameParams{
+	tx, err := dbConfig.DbCfg.SqlDb.Begin()
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while starting transaction", http.StatusInternalServerError)
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	qtx := dbConfig.DbCfg.Queries.WithTx(tx)
+
+	dbUser, err := qtx.SetUserUsername(ctx, database.SetUserUsernameParams{
 		ID: userContext.User.ID,
 		Username: sql.NullString{
 			String: username,
@@ -223,6 +306,29 @@ func (r *mutationResolver) SetUsername(ctx context.Context, username string) (*m
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while setting username", http.StatusInternalServerError)
 		return nil, nil
+	}
+
+	message := "Username set"
+
+	err = handlers.InsertAuditLog(
+		qtx,
+		ctx,
+		handlers.Log[database.User]{
+			UserID:      dbUser.ID,
+			UserEmail:   dbUser.Email,
+			UserRole:    dbUser.Role,
+			EntityType:  "USER",
+			EntityID:    dbUser.ID,
+			Action:      database.AuditActionUPDATE,
+			OldValues:   &userContext.User,
+			NewValues:   &dbUser,
+			Description: &message,
+		})
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+		return nil, nil
+
 	}
 
 	return &model.SetUsernameResponse{

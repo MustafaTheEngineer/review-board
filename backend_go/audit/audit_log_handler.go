@@ -9,21 +9,25 @@ import (
 	"github.com/sqlc-dev/pqtype"
 )
 
-func InsertAuditLog(
+type Log[T any] struct {
+	UserID      uuid.UUID
+	UserEmail   string
+	UserRole    database.Role
+	EntityType  string
+	EntityID    uuid.UUID
+	Action      database.AuditAction
+	OldValues   *T
+	NewValues   *T
+	Description *string
+}
+
+func InsertAuditLog[T any](
 	qtx *database.Queries,
 	ctx context.Context,
-	userID uuid.UUID,
-	userEmail string,
-	userRole database.Role,
-	entityType string,
-	entityID uuid.UUID,
-	action database.AuditAction,
-	oldValues any,
-	newValues any,
-	description *string) error {
+	log Log[T]) error {
 
 	oldValuesByte, err := json.Marshal(
-		oldValues,
+		&log.OldValues,
 	)
 	if err != nil {
 		return err
@@ -31,7 +35,7 @@ func InsertAuditLog(
 	oldValuesRaw := json.RawMessage(oldValuesByte)
 
 	newValuesByte, err := json.Marshal(
-		newValues,
+		&log.NewValues,
 	)
 	if err != nil {
 		return err
@@ -41,20 +45,20 @@ func InsertAuditLog(
 	_, err = qtx.InsertAuditLog(ctx, database.InsertAuditLogParams{
 		ID: uuid.New(),
 		UserID: uuid.NullUUID{
-			UUID:  userID,
+			UUID:  log.UserID,
 			Valid: true,
 		},
 		UserEmail: sql.NullString{
-			String: userEmail,
+			String: log.UserEmail,
 			Valid:  true,
 		},
 		UserRole: database.NullRole{
-			Role:  userRole,
+			Role:  log.UserRole,
 			Valid: true,
 		},
-		EntityType: "USER",
-		EntityID:   entityID,
-		Action:     database.AuditActionCREATE,
+		EntityType: log.EntityType,
+		EntityID:   log.EntityID,
+		Action:     log.Action,
 		OldValues: pqtype.NullRawMessage{
 			RawMessage: oldValuesRaw,
 			Valid:      true,
@@ -62,6 +66,16 @@ func InsertAuditLog(
 		NewValues: pqtype.NullRawMessage{
 			RawMessage: newValuesRaw,
 			Valid:      true,
+		},
+		Description: sql.NullString{
+			String: func() string {
+				if log.Description == nil {
+					return ""
+
+				}
+				return *log.Description
+			}(),
+			Valid: log.Description != nil,
 		},
 	})
 	if err != nil {

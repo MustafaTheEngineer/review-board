@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 
+	handlers "github.com/MustafaTheEngineer/review_board/audit"
 	dbConfig "github.com/MustafaTheEngineer/review_board/config/db"
 	graph "github.com/MustafaTheEngineer/review_board/graph/generated"
 	"github.com/MustafaTheEngineer/review_board/graph/model"
@@ -122,6 +123,30 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 		Amount: fmt.Sprintf("%f", input.Amount),
 		Status: "NEW",
 	})
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+		return nil, nil
+
+	}
+
+	message := "Item Created"
+
+	err = handlers.InsertAuditLog(
+		qtx,
+		ctx,
+		handlers.Log[database.Item]{
+			UserID:      userContext.User.ID,
+			UserEmail:   userContext.User.Email,
+			UserRole:    userContext.User.Role,
+			EntityType:  "ITEM",
+			EntityID:    dbItem.ID,
+			Action:      database.AuditActionCREATE,
+			OldValues:   nil,
+			NewValues:   &dbItem,
+			Description: &message,
+		})
+
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
 		return nil, nil
@@ -170,18 +195,56 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 
 // UpdateItemStatus is the resolver for the updateItemStatus field.
 func (r *mutationResolver) UpdateItemStatus(ctx context.Context, id string, status database.ItemStatus) (*database.Item, error) {
+	userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+	if !ok {
+		helpers.CreateGraphQLError(ctx, "User token is not set", http.StatusUnauthorized)
+		return nil, nil
+	}
+
 	uid, err := uuid.Parse(id)
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Invalid item ID", http.StatusBadRequest)
 		return nil, nil
 	}
 
-	dbItem, err := dbConfig.DbCfg.Queries.UpdateItemStatus(ctx, database.UpdateItemStatusParams{
+	tx, err := dbConfig.DbCfg.SqlDb.Begin()
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while starting transaction", http.StatusInternalServerError)
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	qtx := dbConfig.DbCfg.Queries.WithTx(tx)
+
+	dbItem, err := qtx.UpdateItemStatus(ctx, database.UpdateItemStatusParams{
 		ID:     uid,
 		Status: status,
 	})
 	if err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while updating item status", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	message := "Item Status Updated"
+
+	err = handlers.InsertAuditLog(
+		qtx,
+		ctx,
+		handlers.Log[database.Item]{
+			UserID:      userContext.User.ID,
+			UserEmail:   userContext.User.Email,
+			UserRole:    userContext.User.Role,
+			EntityType:  "ITEM",
+			EntityID:    dbItem.ID,
+			Action:      database.AuditActionCREATE,
+			OldValues:   nil,
+			NewValues:   &dbItem,
+			Description: &message,
+		})
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
 		return nil, nil
 	}
 
