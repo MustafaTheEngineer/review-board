@@ -54,7 +54,7 @@ func GraphqlHandler() {
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 
 	handler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{"http://localhost:4200", "http://localhost:4000"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "Set-Cookie"},
 		AllowCredentials: true,
