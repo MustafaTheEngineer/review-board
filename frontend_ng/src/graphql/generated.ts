@@ -116,6 +116,7 @@ export type Mutation = {
   registerUser: RegisterUserResponse;
   setUsername: SetUsernameResponse;
   signIn: SignInResponse;
+  updateItem?: Maybe<CreateItemResponse>;
   updateItemStatus: Item;
 };
 
@@ -145,6 +146,11 @@ export type MutationSignInArgs = {
 };
 
 
+export type MutationUpdateItemArgs = {
+  input: UpdateItemRequest;
+};
+
+
 export type MutationUpdateItemStatusArgs = {
   id: Scalars['ID']['input'];
   status: ItemStatus;
@@ -160,6 +166,7 @@ export type Query = {
   auditLogs: Array<AuditLog>;
   isUsernameTaken: Scalars['Boolean']['output'];
   item?: Maybe<Item>;
+  itemTags: Array<Tag>;
   items: Array<ItemsResponse>;
   tags: Array<Tag>;
   userConfirmed: Scalars['Boolean']['output'];
@@ -175,6 +182,11 @@ export type QueryIsUsernameTakenArgs = {
 
 
 export type QueryItemArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryItemTagsArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -236,6 +248,14 @@ export type TagsInput = {
 export type TokenValidationResponse = {
   __typename?: 'TokenValidationResponse';
   user: User;
+};
+
+export type UpdateItemRequest = {
+  amount: Scalars['Float']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  tags: Array<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
 };
 
 export type User = {
@@ -319,7 +339,14 @@ export type UpdateItemStatusMutationVariables = Exact<{
 }>;
 
 
-export type UpdateItemStatusMutation = { __typename?: 'Mutation', updateItemStatus: { __typename?: 'Item', id: string, creatorID: string, title: string, description?: string | null, amount: string, status: ItemStatus, deletedByUserID?: string | null, deletedAt?: any | null, createdAt: any, updatedAt: any } };
+export type UpdateItemStatusMutation = { __typename?: 'Mutation', updateItemStatus: { __typename?: 'Item', id: string, creatorID: string, title: string, description?: string | null, riskScore: number, amount: string, status: ItemStatus, deletedByUserID?: string | null, deletedAt?: any | null, createdAt: any, updatedAt: any } };
+
+export type ItemTagsQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ItemTagsQuery = { __typename?: 'Query', itemTags: Array<{ __typename?: 'Tag', id: string, name: string }> };
 
 export type AuditLogsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -332,6 +359,13 @@ export type CreateItemMutationVariables = Exact<{
 
 
 export type CreateItemMutation = { __typename?: 'Mutation', createItem?: { __typename?: 'CreateItemResponse', tags: Array<string>, item: { __typename?: 'Item', id: string, title: string, description?: string | null, amount: string, status: ItemStatus, createdAt: any, updatedAt: any } } | null };
+
+export type UpdateItemMutationVariables = Exact<{
+  input: UpdateItemRequest;
+}>;
+
+
+export type UpdateItemMutation = { __typename?: 'Mutation', updateItem?: { __typename?: 'CreateItemResponse', tags: Array<string>, item: { __typename?: 'Item', id: string, title: string, description?: string | null, amount: string, status: ItemStatus, createdAt: any, updatedAt: any } } | null };
 
 export type UsersQueryVariables = Exact<{
   query?: InputMaybe<UsersInput>;
@@ -560,6 +594,7 @@ export const UpdateItemStatusDocument = gql`
     creatorID
     title
     description
+    riskScore
     amount
     status
     deletedByUserID
@@ -575,6 +610,25 @@ export const UpdateItemStatusDocument = gql`
   })
   export class UpdateItemStatusGQL extends Apollo.Mutation<UpdateItemStatusMutation, UpdateItemStatusMutationVariables> {
     document = UpdateItemStatusDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const ItemTagsDocument = gql`
+    query ItemTags($id: ID!) {
+  itemTags(id: $id) {
+    id
+    name
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class ItemTagsGQL extends Apollo.Query<ItemTagsQuery, ItemTagsQueryVariables> {
+    document = ItemTagsDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);
@@ -631,6 +685,33 @@ export const CreateItemDocument = gql`
   })
   export class CreateItemGQL extends Apollo.Mutation<CreateItemMutation, CreateItemMutationVariables> {
     document = CreateItemDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const UpdateItemDocument = gql`
+    mutation updateItem($input: UpdateItemRequest!) {
+  updateItem(input: $input) {
+    item {
+      id
+      title
+      description
+      amount
+      status
+      createdAt
+      updatedAt
+    }
+    tags
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class UpdateItemGQL extends Apollo.Mutation<UpdateItemMutation, UpdateItemMutationVariables> {
+    document = UpdateItemDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

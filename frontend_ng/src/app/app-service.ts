@@ -61,18 +61,20 @@ export class AppService {
                       this.router.navigate(['confirm-account']);
                       return of(null);
                     }
-                    return this.userHaveUsernameGQL.fetch({
-                      fetchPolicy: 'network-only'
-                    }).pipe(
-                      switchMap(data => {
-                        if (data.error || !data.data?.userHaveUsername) {
-                          this.router.navigate(['choose-username']);
-                          return of(null);
-                        }
-                        this.router.navigate(['home']);
-                        return of(true);
+                    return this.userHaveUsernameGQL
+                      .fetch({
+                        fetchPolicy: 'network-only',
                       })
-                    )
+                      .pipe(
+                        switchMap((data) => {
+                          if (data.error || !data.data?.userHaveUsername) {
+                            this.router.navigate(['choose-username']);
+                            return of(null);
+                          }
+                          this.router.navigate(['home']);
+                          return of(true);
+                        }),
+                      );
                   }),
                 );
             }

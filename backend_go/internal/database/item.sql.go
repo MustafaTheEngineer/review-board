@@ -104,6 +104,44 @@ func (q *Queries) SelectUserItem(ctx context.Context, arg SelectUserItemParams) 
 	return i, err
 }
 
+const updateItem = `-- name: UpdateItem :one
+UPDATE items
+SET title = $1, description = $2, amount = $3
+WHERE id = $4
+RETURNING id, creator_id, title, description, amount, risk_score, status, deleted_by_user_id, deleted_at, created_at, updated_at
+`
+
+type UpdateItemParams struct {
+	Title       string         `json:"title"`
+	Description sql.NullString `json:"description"`
+	Amount      string         `json:"amount"`
+	ID          uuid.UUID      `json:"id"`
+}
+
+func (q *Queries) UpdateItem(ctx context.Context, arg UpdateItemParams) (Item, error) {
+	row := q.db.QueryRowContext(ctx, updateItem,
+		arg.Title,
+		arg.Description,
+		arg.Amount,
+		arg.ID,
+	)
+	var i Item
+	err := row.Scan(
+		&i.ID,
+		&i.CreatorID,
+		&i.Title,
+		&i.Description,
+		&i.Amount,
+		&i.RiskScore,
+		&i.Status,
+		&i.DeletedByUserID,
+		&i.DeletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateItemStatus = `-- name: UpdateItemStatus :one
 UPDATE items
 SET status = $1

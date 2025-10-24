@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { gql } from 'apollo-angular';
 import { Item, ItemGQL, ItemStatus, Role, UpdateItemStatusGQL } from '../../graphql/generated';
@@ -65,50 +65,58 @@ export class ItemDetails {
 
   itemStatus = signal(ItemStatus.New);
 
-  private id$ = this.route.paramMap.pipe(map((paramMap) => paramMap.get('id')));
-  id = toSignal(this.id$, {
-    initialValue: null,
-  });
+  item = signal<Item>({
+    amount: '',
+    createdAt: undefined,
+    creatorID: '',
+    id: '',
+    riskScore: 0,
+    status: ItemStatus.Approved,
+    title: '',
+    updatedAt: undefined,
+    deletedAt: undefined,
+    deletedByUserID: undefined,
+    description: undefined,
+  } satisfies Item);
 
-  item = toSignal(
-    this.id$.pipe(
-      switchMap((id) => {
-        if (!id) {
-          this.router.navigate(['home', 'item']);
-          throw new Error('Invalid item ID');
-        }
+  constructor() {
+    afterNextRender(() => {
+      const id = this.route.snapshot.paramMap.get('id');
+      if (!id) {
+        this.router.navigate(['home', 'item']);
+        throw new Error('Invalid item ID');
+      }
 
-        return this.itemGQL
-          .fetch({
-            fetchPolicy: 'network-only',
-            variables: {
-              id,
-            },
-          })
-          .pipe(
-            catchError((error) => {
+      this.itemGQL
+        .fetch({
+          fetchPolicy: 'network-only',
+          variables: {
+            id,
+          },
+        })
+        .pipe(
+          catchError((error) => {
+            this.router.navigate(['home', 'item']);
+            throw new Error('Failed to fetch item details');
+          }),
+          map((data) => {
+            if (!data.data?.item) {
               this.router.navigate(['home', 'item']);
-              throw new Error('Failed to fetch item details');
-            }),
-            map((data) => {
-              if (!data.data?.item) {
-                this.router.navigate(['home', 'item']);
-                throw new Error('Invalid item ID');
-              }
-              this.itemStatus.set(data.data.item.status);
+              throw new Error('Invalid item ID');
+            }
+            this.itemStatus.set(data.data.item.status);
 
-              return data.data.item;
-            }),
-          );
-      }),
-    ),
-  );
+            return data.data.item;
+          }),
+        )
+        .subscribe((data) => {
+          this.item.set(data);
+        });
+    });
+  }
 
   updateItemStatus() {
-    const id = this.id();
-    if (!id) {
-      return;
-    }
+    const id = this.item().id;
 
     this.updateItemStatusGQL
       .mutate({
@@ -138,6 +146,12 @@ export class ItemDetails {
               autoClose: 5000,
             })
             .subscribe();
+
+          console.log(result.data?.updateItemStatus);
+
+          if (result.data?.updateItemStatus) {
+            this.item.set(result.data.updateItemStatus);
+          }
         }
       });
   }
@@ -168,12 +182,22 @@ const UPDATE_ITEM_STATUS = gql`
       creatorID
       title
       description
+      riskScore
       amount
       status
       deletedByUserID
       deletedAt
       createdAt
       updatedAt
+    }
+  }
+`;
+
+const ITEM_TAGS = gql`
+  query ItemTags($id: ID!) {
+    itemTags(id: $id) {
+      id
+      name
     }
   }
 `;

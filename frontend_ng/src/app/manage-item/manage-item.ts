@@ -55,20 +55,24 @@ import { TuiCurrency, TuiCurrencyPipe } from '@taiga-ui/addon-commerce';
 import { TuiForm, TuiHeader } from '@taiga-ui/layout';
 import { BehaviorSubject, catchError, combineLatest, map, of, switchMap, tap } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { CreateItemGQL, Tag, TagsGQL } from '../../graphql/generated';
+import {
+  CreateItemGQL,
+  ItemGQL,
+  ItemTagsGQL,
+  Tag,
+  TagsGQL,
+  UpdateItemGQL,
+} from '../../graphql/generated';
 import { error } from 'console';
 import { gql } from 'apollo-angular';
 import { ErrorService } from '../error-service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-manage-item',
   imports: [
-    AsyncPipe,
     ReactiveFormsModule,
-    TuiBlock,
     TuiButton,
-    TuiCheckbox,
     TuiChevron,
     TuiCurrencyPipe,
     TuiDataListWrapper,
@@ -86,7 +90,6 @@ import { Router } from '@angular/router';
     TuiIcon,
     TuiInputDate,
     TuiInputNumber,
-    TuiInputPhone,
     TuiInputSlider,
     TuiInputTime,
     TuiLabel,
@@ -105,9 +108,15 @@ import { Router } from '@angular/router';
 })
 export class ManageItem {
   tagsGQL = inject(TagsGQL);
+  itemGQL = inject(ItemGQL);
+  itemTagsGQL = inject(ItemTagsGQL);
   createItemGQL = inject(CreateItemGQL);
+  updateItemGQL = inject(UpdateItemGQL);
   errorService = inject(ErrorService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
+
+  itemId = signal<string | null>(null);
 
   constructor() {
     afterNextRender(() => {
@@ -128,6 +137,80 @@ export class ManageItem {
             }
           }
         });
+
+      const id = this.route.snapshot.paramMap.get('id');
+      if (id) {
+        this.itemId.set(id);
+
+        this.itemGQL
+          .fetch({
+            fetchPolicy: 'network-only',
+            variables: { id },
+          })
+          .pipe(
+            catchError((error) => {
+              this.errorService.alerts
+                .open(`<strong>${error.message}</strong>`, {
+                  appearance: 'negative',
+                  autoClose: 5000,
+                })
+                .subscribe();
+              return of(Error('Failed to fetch item details'));
+            }),
+            switchMap((result) => {
+              if (result instanceof Error) {
+                this.errorService.alerts
+                  .open(`<strong>${result.message}</strong>`, {
+                    appearance: 'negative',
+                    autoClose: 5000,
+                  })
+                  .subscribe();
+                return of(new Error('Failed to fetch item details'));
+              }
+
+              if (!result.data?.item) {
+                this.errorService.alerts.open('Failed to fetch item details', {
+                  appearance: 'negative',
+                  autoClose: 5000,
+                });
+
+                return of(new Error('Failed to fetch item details'));
+              }
+
+              this.itemForm.patchValue({
+                title: result.data.item.title,
+                description: result.data.item.description,
+                amount: parseFloat(result.data.item.amount),
+              });
+
+              return this.itemTagsGQL
+                .fetch({
+                  fetchPolicy: 'network-only',
+                  variables: { id: result.data.item.id },
+                })
+                .pipe(
+                  catchError((error) => {
+                    this.errorService.alerts
+                      .open(`<strong>${error.message}</strong>`, {
+                        appearance: 'negative',
+                        autoClose: 5000,
+                      })
+                      .subscribe();
+                    return of(new Error(error.message));
+                  }),
+                );
+            }),
+          )
+          .subscribe((result) => {
+            if (!(result instanceof Error)) {
+              if (result.data?.itemTags) {
+                this.itemForm.patchValue({
+                  tags: result.data.itemTags.map((tag: Tag) => tag.name),
+                });
+              }
+            }
+          });
+      }
     });
   }
 
@@ -261,34 +344,71 @@ export class ManageItem {
     if (this.itemForm.controls.description.value) {
       desc = this.itemForm.controls.description.value;
     }
-    this.createItemGQL
-      .mutate({
-        fetchPolicy: 'network-only',
-        variables: {
-          input: {
-            title: this.itemForm.controls.title.value,
-            description: desc,
-            amount: this.itemForm.controls.amount.value,
-            tags: this.itemForm.controls.tags.value,
-          },
-        },
-      })
-      .pipe(
-        catchError((error) => {
-          this.errorService.alerts
-            .open(`<strong>${error.message}</strong>`, {
-              appearance: 'negative',
-              autoClose: 5000,
-            })
-            .subscribe();
 
-          return of(new Error(error.message));
-        }),
-      ).subscribe(result => {
-        if (!(result instanceof Error)) {
-          this.router.navigate(['home']);
-        }
-      })
+    const id = this.itemId();
+
+    if (!id) {
+      this.createItemGQL
+        .mutate({
+          fetchPolicy: 'network-only',
+          variables: {
+            input: {
+              title: this.itemForm.controls.title.value,
+              description: desc,
+              amount: this.itemForm.controls.amount.value,
+              tags: this.itemForm.controls.tags.value,
+            },
+          },
+        })
+        .pipe(
+          catchError((error) => {
+            this.errorService.alerts
+              .open(`<strong>${error.message}</strong>`, {
+                appearance: 'negative',
+                autoClose: 5000,
+              })
+              .subscribe();
+
+            return of(new Error(error.message));
+          }),
+        )
+        .subscribe((result) => {
+          if (!(result instanceof Error)) {
+            this.router.navigate(['home']);
+          }
+        });
+    } else {
+        this.updateItemGQL
+        .mutate({
+          fetchPolicy: 'network-only',
+          variables: {
+            input: {
+              id,
+              title: this.itemForm.controls.title.value,
+              description: desc,
+              amount: this.itemForm.controls.amount.value,
+              tags: this.itemForm.controls.tags.value,
+            },
+          },
+        })
+        .pipe(
+          catchError((error) => {
+            this.errorService.alerts
+              .open(`<strong>${error.message}</strong>`, {
+                appearance: 'negative',
+                autoClose: 5000,
+              })
+              .subscribe();
+
+            return of(new Error(error.message));
+          }),
+        )
+        .subscribe((result) => {
+          if (!(result instanceof Error)) {
+            this.router.navigate(['home']);
+          }
+        });
+    }
   }
 }
 
@@ -314,6 +434,23 @@ export function forbiddenNameValidator(): ValidatorFn {
 const CREATE_ITEM = gql`
   mutation CreateItem($input: CreateItemRequest!) {
     createItem(input: $input) {
+      item {
+        id
+        title
+        description
+        amount
+        status
+        createdAt
+        updatedAt
+      }
+      tags
+    }
+  }
+`;
+
+const UPDATE_ITEM = gql`
+  mutation updateItem($input: UpdateItemRequest!) {
+    updateItem(input: $input) {
       item {
         id
         title

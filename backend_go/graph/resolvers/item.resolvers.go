@@ -193,6 +193,163 @@ func (r *mutationResolver) CreateItem(ctx context.Context, input model.CreateIte
 	}, tx.Commit()
 }
 
+// UpdateItem is the resolver for the updateItem field.
+func (r *mutationResolver) UpdateItem(ctx context.Context, input model.UpdateItemRequest) (*model.CreateItemResponse, error) {
+	userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)
+	if !ok {
+		helpers.CreateGraphQLError(ctx, "User token is not set", http.StatusUnauthorized)
+		return nil, nil
+	}
+
+	uid, err := uuid.Parse(input.ID)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Invalid item ID", http.StatusBadRequest)
+		return nil, nil
+	}
+
+	tx, err := dbConfig.DbCfg.SqlDb.Begin()
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while starting transaction", http.StatusInternalServerError)
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	qtx := dbConfig.DbCfg.Queries.WithTx(tx)
+
+	// Fetch the existing item for audit logging
+	oldItem, err := qtx.ItemById(ctx, uid)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			helpers.CreateGraphQLError(ctx, "Item not found", http.StatusNotFound)
+			return nil, nil
+		}
+		helpers.CreateGraphQLError(ctx, "Error while fetching item", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	if oldItem.CreatorID != userContext.User.ID {
+		helpers.CreateGraphQLError(ctx, "Unauthorized to update this item", http.StatusForbidden)
+		return nil, nil
+	}
+
+	if input.Title != oldItem.Title {
+		_, err = qtx.SelectUserItem(ctx, database.SelectUserItemParams{
+			CreatorID: oldItem.CreatorID,
+			Title:     input.Title,
+		})
+
+		if err == nil {
+			helpers.CreateGraphQLError(ctx, "User already has an item with this title", http.StatusConflict)
+			return nil, nil
+		} else if err != sql.ErrNoRows {
+			helpers.CreateGraphQLError(ctx, "Error while checking user item", http.StatusInternalServerError)
+			return nil, nil
+		}
+	}
+
+	updateParams := database.UpdateItemParams{
+		ID:    uid,
+		Title: input.Title,
+		Description: func() sql.NullString {
+			if input.Description != nil {
+				return sql.NullString{
+					String: *input.Description,
+					Valid:  true,
+				}
+			}
+			return oldItem.Description
+		}(),
+		Amount: fmt.Sprintf("%f", input.Amount),
+	}
+
+	dbItem, err := qtx.UpdateItem(ctx, updateParams)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while updating item", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	var tags []string
+	if len(input.Tags) > 0 {
+		_, err = qtx.DeleteItemTags(ctx, dbItem.ID)
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, "Error while deleting existing tags", http.StatusInternalServerError)
+			return nil, nil
+		}
+
+		tags = make([]string, 0, len(input.Tags))
+		for _, tag := range input.Tags {
+			dbTag, err := qtx.SelectTagByName(ctx, tag)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					newDbTag, err := qtx.InsertTag(ctx, database.InsertTagParams{
+						ID: uuid.New(),
+						CreatedByUserID: uuid.NullUUID{
+							UUID:  userContext.User.ID,
+							Valid: true,
+						},
+						Name: tag,
+					})
+					if err != nil {
+						helpers.CreateGraphQLError(ctx, "Error while inserting tag", http.StatusInternalServerError)
+						return nil, nil
+					}
+					dbTag = newDbTag
+				} else {
+					helpers.CreateGraphQLError(ctx, "Error while selecting tag", http.StatusInternalServerError)
+					return nil, nil
+				}
+			}
+
+			_, err = qtx.InsertItemTag(ctx, database.InsertItemTagParams{
+				ItemID: dbItem.ID,
+				TagID:  dbTag.ID,
+			})
+			if err != nil {
+				helpers.CreateGraphQLError(ctx, "Error while inserting item_tag", http.StatusInternalServerError)
+				return nil, nil
+			}
+			tags = append(tags, dbTag.Name)
+		}
+	} else {
+		dbTags, err := qtx.SelectItemTags(ctx, dbItem.ID)
+		if err != nil {
+			helpers.CreateGraphQLError(ctx, "Error while fetching existing tags", http.StatusInternalServerError)
+			return nil, nil
+		}
+		tags = make([]string, 0, len(dbTags))
+		for _, dbTag := range dbTags {
+			tags = append(tags, dbTag.Name)
+		}
+	}
+
+	message := "Item Updated"
+	err = handlers.InsertAuditLog(
+		qtx,
+		ctx,
+		handlers.Log[database.Item]{
+			UserID:      userContext.User.ID,
+			UserEmail:   userContext.User.Email,
+			UserRole:    userContext.User.Role,
+			EntityType:  "ITEM",
+			EntityID:    dbItem.ID,
+			Action:      database.AuditActionUPDATE,
+			OldValues:   &oldItem,
+			NewValues:   &dbItem,
+			Description: &message,
+		})
+
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, err.Error(), http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	return &model.CreateItemResponse{
+		Item: &dbItem,
+		Tags: tags,
+	}, tx.Commit()
+}
+
 // UpdateItemStatus is the resolver for the updateItemStatus field.
 func (r *mutationResolver) UpdateItemStatus(ctx context.Context, id string, status database.ItemStatus) (*database.Item, error) {
 	userContext, ok := ctx.Value(types.UserContextKey).(types.UserContext)

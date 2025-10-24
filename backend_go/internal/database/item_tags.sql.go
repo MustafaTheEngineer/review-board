@@ -7,9 +7,19 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
+
+const deleteItemTags = `-- name: DeleteItemTags :execresult
+DELETE FROM item_tags
+WHERE item_id = $1
+`
+
+func (q *Queries) DeleteItemTags(ctx context.Context, itemID uuid.UUID) (sql.Result, error) {
+	return q.db.ExecContext(ctx, deleteItemTags, itemID)
+}
 
 const insertItemTag = `-- name: InsertItemTag :one
 INSERT INTO item_tags (item_id, tag_id)

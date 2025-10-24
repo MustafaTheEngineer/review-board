@@ -106,6 +106,7 @@ type ComplexityRoot struct {
 		RegisterUser     func(childComplexity int, input model.NewUser) int
 		SetUsername      func(childComplexity int, username string) int
 		SignIn           func(childComplexity int, input model.SignInInput) int
+		UpdateItem       func(childComplexity int, input model.UpdateItemRequest) int
 		UpdateItemStatus func(childComplexity int, id string, status database.ItemStatus) int
 	}
 
@@ -113,6 +114,7 @@ type ComplexityRoot struct {
 		AuditLogs        func(childComplexity int) int
 		IsUsernameTaken  func(childComplexity int, username string) int
 		Item             func(childComplexity int, id string) int
+		ItemTags         func(childComplexity int, id string) int
 		Items            func(childComplexity int, query *model.ItemsRequest) int
 		Tags             func(childComplexity int, query *model.TagsInput) int
 		UserConfirmed    func(childComplexity int) int
@@ -437,6 +439,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.SignIn(childComplexity, args["input"].(model.SignInInput)), true
 
+	case "Mutation.updateItem":
+		if e.complexity.Mutation.UpdateItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateItem_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateItem(childComplexity, args["input"].(model.UpdateItemRequest)), true
+
 	case "Mutation.updateItemStatus":
 		if e.complexity.Mutation.UpdateItemStatus == nil {
 			break
@@ -479,6 +493,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Item(childComplexity, args["id"].(string)), true
+
+	case "Query.itemTags":
+		if e.complexity.Query.ItemTags == nil {
+			break
+		}
+
+		args, err := ec.field_Query_itemTags_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ItemTags(childComplexity, args["id"].(string)), true
 
 	case "Query.items":
 		if e.complexity.Query.Items == nil {
@@ -656,6 +682,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNewUser,
 		ec.unmarshalInputSignInInput,
 		ec.unmarshalInputTagsInput,
+		ec.unmarshalInputUpdateItemRequest,
 		ec.unmarshalInputUsersInput,
 	)
 	first := true
@@ -823,6 +850,13 @@ extend type Mutation {
     @checkUsername
     @checkIfConfirmed
     @validateToken
+  updateItem(input: UpdateItemRequest!): CreateItemResponse
+    @validateItemTags
+    @validateItemAmount
+    @validateItemTitle
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
   updateItemStatus(id: ID!, status: ItemStatus!): Item!
     @isAdmin
     @checkUsername
@@ -831,6 +865,14 @@ extend type Mutation {
 }
 
 input CreateItemRequest {
+  title: String!
+  description: String
+  amount: Float!
+  tags: [String!]!
+}
+
+input UpdateItemRequest {
+  id: ID!
   title: String!
   description: String
   amount: Float!
@@ -890,6 +932,7 @@ extend type Query {
     @checkUsername
     @checkIfConfirmed
     @validateToken
+  itemTags(id: ID!): [Tag!]! @checkUsername @checkIfConfirmed @validateToken
 }
 
 input TagsInput {

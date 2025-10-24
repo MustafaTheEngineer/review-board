@@ -14,6 +14,7 @@ import (
 	"github.com/MustafaTheEngineer/review_board/helpers"
 	"github.com/MustafaTheEngineer/review_board/internal/database"
 	goqu "github.com/doug-martin/goqu/v9"
+	"github.com/google/uuid"
 )
 
 // Tags is the resolver for the tags field.
@@ -68,6 +69,30 @@ func (r *queryResolver) Tags(ctx context.Context, query *model.TagsInput) ([]*da
 	if err = dbTags.Err(); err != nil {
 		helpers.CreateGraphQLError(ctx, "Error while fetching tags", http.StatusInternalServerError)
 		return nil, nil
+	}
+
+	return tags, nil
+}
+
+// ItemTags is the resolver for the itemTags field.
+func (r *queryResolver) ItemTags(ctx context.Context, id string) ([]*database.Tag, error) {
+	itemUUID, err := uuid.Parse(id)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Invalid item ID", http.StatusBadRequest)
+		return nil, nil
+	}
+	tagRows, err := dbConfig.DbCfg.Queries.SelectItemTags(ctx, itemUUID)
+	if err != nil {
+		helpers.CreateGraphQLError(ctx, "Error while fetching item tags", http.StatusInternalServerError)
+		return nil, nil
+	}
+
+	tags := make([]*database.Tag, len(tagRows))
+	for i, row := range tagRows {
+		tags[i] = &database.Tag{
+			ID:   row.ID,
+			Name: row.Name,
+		}
 	}
 
 	return tags, nil

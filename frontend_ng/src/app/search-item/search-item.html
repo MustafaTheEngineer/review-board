@@ -96,7 +96,7 @@
         <div tuiAppearance="floating" tuiCardLarge>
           <header tuiHeader>
             <h2 tuiTitle>
-              {{ item.item.title }}
+              {{ item.item.title }} - {{ item.item.amount }}$
             </h2>
             <tui-chip [appearance]="itemService.itemStatusColor(item.item.status)">
               {{ item.item.status }}
@@ -124,15 +124,30 @@
           </div>
 
           <footer>
-            <button
-              appearance="secondary"
-              size="m"
-              tuiButton
-              type="button"
-              [routerLink]="['..', item.item.id]"
-            >
-              Details
-            </button>
+            <div class="action-buttons">
+              <button
+                appearance="secondary"
+                size="m"
+                tuiButton
+                type="button"
+                [routerLink]="['..', item.item.id]"
+              >
+                Details
+              </button>
+
+              @if (item.item.creatorID === appService.user.id) {
+                <button
+                  appearance="secondary"
+                  iconStart="@tui.pencil"
+                  tuiButton
+                  type="button"
+                  size="m"
+                  [routerLink]="['..', 'manage', item.item.id]"
+                >
+                  Edit
+                </button>
+              }
+            </div>
 
             @if (usersMap().get(item.item.creatorID); as user) {
               <tui-chip size="m" [style.border-radius.rem]="5">

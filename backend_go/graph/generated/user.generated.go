@@ -24,6 +24,7 @@ type MutationResolver interface {
 	ConfirmUser(ctx context.Context, input model.ConfirmUserInput) (*model.ConfirmUserResponse, error)
 	SetUsername(ctx context.Context, username string) (*model.SetUsernameResponse, error)
 	CreateItem(ctx context.Context, input model.CreateItemRequest) (*model.CreateItemResponse, error)
+	UpdateItem(ctx context.Context, input model.UpdateItemRequest) (*model.CreateItemResponse, error)
 	UpdateItemStatus(ctx context.Context, id string, status database.ItemStatus) (*database.Item, error)
 }
 type UserResolver interface {
@@ -104,6 +105,17 @@ func (ec *executionContext) field_Mutation_updateItemStatus_args(ctx context.Con
 		return nil, err
 	}
 	args["status"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateItem_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateItemRequest2githubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐUpdateItemRequest)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -544,6 +556,101 @@ func (ec *executionContext) fieldContext_Mutation_createItem(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateItem,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateItem(ctx, fc.Args["input"].(model.UpdateItemRequest))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.directives.ValidateItemTags == nil {
+					var zeroVal *model.CreateItemResponse
+					return zeroVal, errors.New("directive validateItemTags is not implemented")
+				}
+				return ec.directives.ValidateItemTags(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.directives.ValidateItemAmount == nil {
+					var zeroVal *model.CreateItemResponse
+					return zeroVal, errors.New("directive validateItemAmount is not implemented")
+				}
+				return ec.directives.ValidateItemAmount(ctx, nil, directive1)
+			}
+			directive3 := func(ctx context.Context) (any, error) {
+				if ec.directives.ValidateItemTitle == nil {
+					var zeroVal *model.CreateItemResponse
+					return zeroVal, errors.New("directive validateItemTitle is not implemented")
+				}
+				return ec.directives.ValidateItemTitle(ctx, nil, directive2)
+			}
+			directive4 := func(ctx context.Context) (any, error) {
+				if ec.directives.CheckUsername == nil {
+					var zeroVal *model.CreateItemResponse
+					return zeroVal, errors.New("directive checkUsername is not implemented")
+				}
+				return ec.directives.CheckUsername(ctx, nil, directive3)
+			}
+			directive5 := func(ctx context.Context) (any, error) {
+				if ec.directives.CheckIfConfirmed == nil {
+					var zeroVal *model.CreateItemResponse
+					return zeroVal, errors.New("directive checkIfConfirmed is not implemented")
+				}
+				return ec.directives.CheckIfConfirmed(ctx, nil, directive4)
+			}
+			directive6 := func(ctx context.Context) (any, error) {
+				if ec.directives.ValidateToken == nil {
+					var zeroVal *model.CreateItemResponse
+					return zeroVal, errors.New("directive validateToken is not implemented")
+				}
+				return ec.directives.ValidateToken(ctx, nil, directive5)
+			}
+
+			next = directive6
+			return next
+		},
+		ec.marshalOCreateItemResponse2ᚖgithubᚗcomᚋMustafaTheEngineerᚋreview_boardᚋgraphᚋmodelᚐCreateItemResponse,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "item":
+				return ec.fieldContext_CreateItemResponse_item(ctx, field)
+			case "tags":
+				return ec.fieldContext_CreateItemResponse_tags(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CreateItemResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateItem_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1295,6 +1402,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createItem":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createItem(ctx, field)
+			})
+		case "updateItem":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateItem(ctx, field)
 			})
 		case "updateItemStatus":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {

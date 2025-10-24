@@ -1,6 +1,6 @@
 <form tuiForm="l" [formGroup]="itemForm" (ngSubmit)="onSubmit()">
   <header tuiHeader>
-    <h3 tuiTitle>New Item</h3>
+    <h3 tuiTitle> {{ itemId() ? "Update" : "New" }}  Item</h3>
   </header>
 
   <tui-textfield>
@@ -36,6 +36,6 @@
   </tui-textfield>
   <tui-error [error]="tagsError()" />
 
-  <button tuiButton type="submit" [disabled]="itemForm.invalid">Create</button>
+  <button tuiButton type="submit" [disabled]="itemForm.invalid">{{ itemId() ? "Update" : "Create" }}</button>
 </form>
 

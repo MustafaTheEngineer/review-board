@@ -82,6 +82,14 @@ type TokenValidationResponse struct {
 	User *database.User `json:"user"`
 }
 
+type UpdateItemRequest struct {
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	Description *string  `json:"description,omitempty"`
+	Amount      float64  `json:"amount"`
+	Tags        []string `json:"tags"`
+}
+
 type UsersInput struct {
 	Limit        *int32   `json:"limit,omitempty"`
 	Offset       *int32   `json:"offset,omitempty"`

@@ -51,6 +51,7 @@ import { gql } from 'apollo-angular';
 import { RouterLink } from '@angular/router';
 import { ItemService } from '../item-service';
 import { TuiArcChart, TuiRingChart } from '@taiga-ui/addon-charts';
+import { AppService } from '../app-service';
 
 @Component({
   selector: 'app-search-item',
@@ -88,6 +89,7 @@ export class SearchItem {
   tagsGQL = inject(TagsGQL);
   itemsGQL = inject(ItemsGQL);
   itemService = inject(ItemService);
+  appService = inject(AppService);
 
   usersMap = signal(new Map<string, UserPartial>());
   fetchItems$ = this.itemsGQL.fetch({

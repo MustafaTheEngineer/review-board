@@ -32,6 +32,13 @@ extend type Mutation {
     @checkUsername
     @checkIfConfirmed
     @validateToken
+  updateItem(input: UpdateItemRequest!): CreateItemResponse
+    @validateItemTags
+    @validateItemAmount
+    @validateItemTitle
+    @checkUsername
+    @checkIfConfirmed
+    @validateToken
   updateItemStatus(id: ID!, status: ItemStatus!): Item!
     @isAdmin
     @checkUsername
@@ -40,6 +47,14 @@ extend type Mutation {
 }
 
 input CreateItemRequest {
+  title: String!
+  description: String
+  amount: Float!
+  tags: [String!]!
+}
+
+input UpdateItemRequest {
+  id: ID!
   title: String!
   description: String
   amount: Float!

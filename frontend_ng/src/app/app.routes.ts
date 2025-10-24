@@ -27,6 +27,10 @@ export const routes: Routes = [
             path: 'manage',
             children: [
               {
+                path: ':id',
+                component: ManageItem,
+              },
+              {
                 path: '',
                 component: ManageItem,
               },

@@ -8,6 +8,7 @@ extend type Query {
     @checkUsername
     @checkIfConfirmed
     @validateToken
+  itemTags(id: ID!): [Tag!]! @checkUsername @checkIfConfirmed @validateToken
 }
 
 input TagsInput {
