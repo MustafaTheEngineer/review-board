@@ -41,13 +41,17 @@ Install database migration tool
 ```
 go install github.com/pressly/goose/v3/cmd/goose@latest
 ```
-Navigate to chema folder.
+Navigate to schema folder.
 ```
 cd sql/schema
 ```
 And migrate database:
 ```
 goose postgres "postgres://postgres:1234@localhost:5432/review_board?sslmode=disable" up
+```
+Go back to backend root
+```
+cd ../..
 ```
 And then install all packages:
 ```
