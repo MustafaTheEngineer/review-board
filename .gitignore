@@ -4,7 +4,6 @@
 
 backend_go/vendor
 backend_go/review_board.exe
-backend_go/.env
 backend_go/sqlc.yaml
 
 # Compiled output
