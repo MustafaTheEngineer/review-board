@@ -30,13 +30,12 @@ git clone https://github.com/MustafaTheEngineer/review-board.git
   npm install -g pnpm@latest-10
   ```
 #### 7. Create database
-Database name should be: review_board
+Database name should be: review_board \
 Open pgAdmin, create a database with user: postgres (password should be 1234)
 #### 8. Navigate to backend_go
 ```
 cd backend_go
 ```
-Run:
 Install database migration tool
 ```
 go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -60,3 +59,28 @@ go mod tidy
 ```
 go mod vendor
 ```
+Build backend
+```
+go build
+```
+And run backend
+```
+./review_board
+```
+You should see **2025/10/26 17:58:08 connect to http://localhost:8080/ for GraphQL playground** \
+We will continue with another command line for frontend
+#### 8. Navigate to backend_ng
+Install packages
+```
+pnpm i
+```
+And run app
+```
+pnpm run start
+```
+#### 9. Info
+There are two user registered whose passwords: **123456789** \
+user@mail.com \
+admin@mail.com
+
+Only admin can change the item status and only item owner can edit item.
