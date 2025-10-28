@@ -30,7 +30,7 @@ export const appConfig: ApplicationConfig = {
       const errorService = inject(ErrorService);
       const router = inject(Router);
       const httpLink = inject(HttpLink);
-      const http = httpLink.create({ uri: 'http://31.97.35.242:8080/query', withCredentials: true });
+      const http = httpLink.create({ uri: '/query', withCredentials: true });
 
       const error = new ErrorLink((options) => {
         if (options.result?.errors) {

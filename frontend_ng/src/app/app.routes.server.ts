@@ -1,6 +1,6 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
-export const routesIDs: string[] = ['manage-id', 'item-id', ];
+export const routesIDs: string[] = ['manage-id', 'item-id', 'search-id'];
 
 export const serverRoutes: ServerRoute[] = [
   {
@@ -22,5 +22,9 @@ export const serverRoutes: ServerRoute[] = [
       const ids = routesIDs;
       return ids.map((id) => ({ id }));
     },
+  },
+  {
+    path: 'home/item/search',
+    renderMode: RenderMode.Server,
   },
 ];
